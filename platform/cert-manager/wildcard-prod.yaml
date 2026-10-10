@@ -12,4 +12,4 @@ spec:
     - "*.prod.gba-lab.win"
   issuerRef:
     kind: ClusterIssuer
-    name: letsencrypt-staging   # -> letsencrypt-prod une fois la chaîne validée
+    name: letsencrypt-prod      # staging validé le 2026-10-10
