@@ -1,0 +1,16 @@
+# cert-manager sur PROD-01 (ADR-021, ADR-022)
+# Chart : oci://quay.io/jetstack/charts/cert-manager  --version v1.21.2
+# Installer / mettre à jour :
+#   helm upgrade --install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+#     --version v1.21.2 -n cert-manager --create-namespace \
+#     -f platform/cert-manager/values-prod.yaml --kube-context prod-01 --wait
+
+crds:
+  enabled: true   # le chart installe les CRD (types Certificate, ClusterIssuer…)
+  keep: true      # un « helm uninstall » ne supprime pas les CRD, ni donc les certificats
+
+# Vérification DNS-01 : interroger directement les DNS publics de Cloudflare,
+# jamais la Livebox (cache, lenteur) -> validation plus rapide et fiable.
+extraArgs:
+  - --dns01-recursive-nameservers-only
+  - --dns01-recursive-nameservers=1.1.1.1:53,1.0.0.1:53
