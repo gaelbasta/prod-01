@@ -1,0 +1,18 @@
+# Surcharge du Traefik fourni par K3s (ADR-023) — conservée lors des mises à jour de K3s.
+# Appliquer : kubectl --context prod-01 apply -f platform/traefik/helmchartconfig.yaml
+# Effet     : K3s réinstalle Traefik avec ces valeurs (redémarrage de Traefik, quelques secondes).
+# Syntaxe valable pour le chart Traefik >= 34 (K3s v1.36.5 : traefik-40.1.x).
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        redirections:
+          entryPoint:          # tout ce qui arrive en http:// (80) est renvoyé vers https:// (443)
+            to: websecure
+            scheme: https
+            permanent: true    # code 308 : le navigateur retient la redirection
