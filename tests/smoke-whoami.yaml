@@ -1,6 +1,6 @@
-# Test de fumée : vérifie toute la chaîne DNS → pare-feu → Traefik → pod.
+# Test de fumée : vérifie toute la chaîne DNS → pare-feu → Traefik → certificat → pod.
 # Déployer :  kubectl --context prod-01 apply -f tests/smoke-whoami.yaml
-# Tester   :  http://test.prod.gba-lab.win  (page texte « Hostname: whoami-… »)
+# Tester   :  https://test.prod.gba-lab.win  (cadenas valide + page « Hostname: whoami-… »)
 # Nettoyer :  kubectl --context prod-01 delete namespace test
 apiVersion: v1
 kind: Namespace
@@ -44,6 +44,9 @@ metadata:
   namespace: test
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - test.prod.gba-lab.win      # pas de secretName : certificat par défaut (TLSStore)
   rules:
     - host: test.prod.gba-lab.win
       http:
