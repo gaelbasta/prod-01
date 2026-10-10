@@ -30,6 +30,10 @@ args: []
 
 replicas: 1
 
+# Pause avant l'arrêt d'un ancien pod lors d'une mise à jour, pour que Traefik ait le temps de ne plus
+# lui envoyer de requêtes (sinon erreurs 502/504 ponctuelles pendant chaque déploiement). 0 = désactivé.
+shutdownDelaySeconds: 5
+
 # Variables d'environnement NON secrètes.
 env: {}                     # ex. { TZ: Europe/Paris, LOG_LEVEL: info }
 

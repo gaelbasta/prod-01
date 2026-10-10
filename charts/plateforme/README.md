@@ -37,6 +37,7 @@ Un projet n'écrit **aucun YAML Kubernetes** : seulement un `values-<env>.yaml` 
 | `healthPath` | `/healthz` / `/` | | route de santé |
 | `args` | `[]` | | arguments du conteneur |
 | `replicas` | `1` | | forcé à 1 si `persistence` |
+| `shutdownDelaySeconds` | `5` | | pause avant l'arrêt d'un ancien pod (déploiement sans coupure) ; max 25 |
 | `env` | `{}` | | variables **non secrètes** |
 | `secretEnv` | `[]` | | noms de Secrets (créés à la main) injectés en variables |
 | `persistence.enabled` | `false` | | volume de données (profil app) |

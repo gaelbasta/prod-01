@@ -21,6 +21,7 @@
     "healthPath": { "type": ["string", "null"] },
     "args": { "type": "array", "items": { "type": "string" } },
     "replicas": { "type": "integer", "minimum": 0 },
+    "shutdownDelaySeconds": { "type": "integer", "minimum": 0, "maximum": 25 },
     "env": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean"] } },
     "secretEnv": { "type": "array", "items": { "type": "string" } },
     "persistence": {
