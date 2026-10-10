@@ -1,0 +1,15 @@
+# Certificat wildcard *.prod.gba-lab.win, servi par défaut par Traefik (ADR-022)
+# Appliquer : kubectl --context prod-01 apply -f platform/cert-manager/wildcard-prod.yaml
+# Coffre produit : kube-system/wildcard-prod-tls (renouvelé automatiquement ~30 j avant expiration)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-prod
+  namespace: kube-system        # même namespace que Traefik et son TLSStore
+spec:
+  secretName: wildcard-prod-tls
+  dnsNames:
+    - "*.prod.gba-lab.win"
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-staging   # -> letsencrypt-prod une fois la chaîne validée
