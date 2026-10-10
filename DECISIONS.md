@@ -73,6 +73,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : documentation en Markdown dans Git, rendue en site par MkDocs (ou son successeur, à vérifier à l'installation). Le wiki **agrège** le dossier `docs/` de chaque projet.
 - **Pourquoi** : la doc vit avec le code, est versionnée, et Claude/Codex peuvent l'écrire directement.
 
+> Outil et organisation précisés par **ADR-024** (2026-10-10) : MkDocs 1.6 figé, thème readthedocs, repo `wiki`.
+
 ## ADR-012 — Sauvegardes
 - **Date** : 2026-10-09 · **Statut** : Acceptée
 - **Décision** : restic (chiffré) depuis PROD-01 vers le disque 3,5" branché sur le **N100**, en attendant le NAS. Le service de sauvegarde tourne sur le système du N100, hors K3s.
@@ -171,6 +173,22 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Chart **0.1.0** publié (`sha256:8dfa83fc…f6f4078`), tag Git `plateforme-0.1.0`, paquet GHCR **privé**. Test `smoke` déployé sur PROD-01 depuis GHCR : HTTPS valide, redirection 308, mise à jour sans coupure (300/300).
   - Ajout de `shutdownDelaySeconds` (pause `preStop` de 5 s) après avoir **mesuré** 1 erreur 502/504 sur 300 requêtes pendant chaque mise à jour sans elle.
   - Redirection : `platform/traefik/helmchartconfig.yaml`. Syntaxe du chart Traefik 40 : `ports.web.http.redirections` (l'ancienne clé est ignorée sans erreur → toujours vérifier les arguments de Traefik).
+
+## ADR-024 — Wiki : MkDocs 1.6 figé, thème readthedocs, repo `wiki` qui rassemble les docs
+- **Date** : 2026-10-10 · **Statut** : Acceptée · **Précise** : ADR-011, ADR-005, ADR-023
+- **Contexte** : ADR-011 demandait de vérifier à l'installation « MkDocs ou son successeur ». État au 2026-10-10 : MkDocs 1.6.1 (2024) est la dernière version stable ; **MkDocs 2.0** est en préversion et supprime les plugins ; l'équipe de Material for MkDocs développe désormais **Zensical**, encore en alpha (0.1.0 annoncée pour le 5 novembre 2026).
+- **Décision** :
+  1. **MkDocs 1.6.1 figé** (`requirements.txt` du repo `wiki`), avec son thème intégré **`readthedocs`** (préférence de Gael, habitué à ce rendu) et le plugin **awesome-nav 3.3.0** pour l'ordre du menu.
+  2. **Un repo dédié `gaelbasta/wiki`** (privé), qui ne contient pas de doc mais la mécanique : `projets.txt` liste les repos publiés ; `scripts/construire.sh` les télécharge **depuis GitHub** (branche `main`) puis construit l'image (MkDocs → nginx `nginxinc/nginx-unprivileged:1.30-alpine`). Copie de travail : `~/claude-projects/wiki`.
+  3. **Périmètre par repo** : `md` (tous les `.md` du repo, arborescence conservée — cas normal) ou `tout` (tous les fichiers suivis par Git, pour que les liens vers `scripts/` et les YAML fonctionnent ; utilisé pour prod-01). On prend tout le repo et pas seulement `docs/` car les docs pointent vers des fichiers à la racine (`../../DECISIONS.md`).
+  4. **Ordre du menu** : un fichier `.nav.yml` (facultatif) dans chaque dossier du repo du projet ; sans lui, ordre alphabétique des noms de fichiers.
+  5. **Image privée** sur GHCR (`ghcr.io/gaelbasta/wiki`, tag daté `AAAA.MM.JJ-HHMM`), déployée avec le chart plateforme en profil `static` sur `https://wiki.prod.gba-lab.win`.
+- **Pourquoi** : en production on prend ce qui est stable ; le thème readthedocs est fourni avec MkDocs (une dépendance de moins). La doc publiée est toujours celle qui est **poussée** sur GitHub, jamais une copie locale. L'ordre du menu vit avec la doc qu'il décrit.
+- **Conséquences** :
+  - Thème readthedocs : pas de mode sombre, pas de bouton « copier », cases à cocher `- [ ]` affichées en texte.
+  - Le wiki n'est **pas mis à jour automatiquement** : après un push de doc, reconstruire et redéployer (runbook `wiki.md`). Automatisation possible plus tard.
+  - Les dépôts sont téléchargés avec la clé SSH GitHub de dev-linux : la construction se fait sur dev-linux.
+  - Sortie de MkDocs 1.x à réévaluer (Zensical stable, ou MkDocs 2.0) : Zensical reprend l'apparence Material, pas readthedocs. Le Markdown, lui, reste identique.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

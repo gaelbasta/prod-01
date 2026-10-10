@@ -1,0 +1,8 @@
+# Ordre du menu du dossier docs/ dans le wiki (plugin awesome-nav, ADR-024)
+nav:
+  - PLATFORM_STANDARD.md
+  - Architecture: architecture
+  - Runbooks: runbooks
+  - GLOSSAIRE.md
+  - REPRISE.md
+  - "*"               # tout nouveau fichier ou dossier, ensuite

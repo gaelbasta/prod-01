@@ -1,0 +1,11 @@
+# Ordre des runbooks dans le wiki = ordre chronologique des phases (plugin awesome-nav, ADR-024)
+nav:
+  - README.md
+  - phase-0-1-preparation-bios.md
+  - audit-materiel.md
+  - installation-ubuntu.md
+  - socle-os.md
+  - installation-k3s.md
+  - https-certificats.md
+  - deployer-une-app.md
+  - "*"               # tout nouveau runbook apparaît ensuite, sans rien oublier

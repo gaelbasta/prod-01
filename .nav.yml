@@ -1,0 +1,8 @@
+# Ordre du menu de ce repo dans le wiki (plugin awesome-nav, ADR-024)
+nav:
+  - README.md
+  - ROADMAP.md
+  - DECISIONS.md
+  - Documentation: docs
+  - Chart plateforme: charts/plateforme/README.md
+  - "*.md"            # tout nouveau fichier Markdown à la racine, ensuite
