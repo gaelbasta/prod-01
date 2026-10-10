@@ -20,8 +20,8 @@
 |---|---|---|
 | Nom du projet | minuscules, tirets | `prism` |
 | Namespace | = nom du projet | `prism` |
-| URL prod | `<projet>.prod.<domaine>` | `prism.prod.<domaine>` |
-| URL pprod | `<projet>.pprod.<domaine>` | `prism.pprod.<domaine>` |
+| URL prod | `<projet>.prod.gba-lab.win` | `prism.prod.gba-lab.win` |
+| URL pprod | `<projet>.pprod.gba-lab.win` | `prism.pprod.gba-lab.win` |
 | Image | `ghcr.io/<compte>/<projet>:<version>` | `ghcr.io/<compte>/prism:1.0.0` |
 | Version | jamais `latest` en prod | `1.0.0` |
 | Données | toujours dans un volume, jamais dans l'image | — |

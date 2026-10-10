@@ -8,7 +8,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 
 | # | Phase | Contenu | Statut |
 |---|---|---|---|
-| 0 | Préparation | ✅ Repo `prod-01` sur GitHub, ✅ clé USB, ✅ BIOS à jour (1.02, pas de flash nécessaire). Reste : **achat du nom de domaine** (requis en phase 5) | 🟨 |
+| 0 | Préparation | Repo `prod-01` sur GitHub, clé USB, BIOS à jour (1.02, pas de flash nécessaire), domaine `gba-lab.win` (Cloudflare, déjà détenu) | ✅ 2026-10-10 |
 | 1 | Audit matériel | BIOS réglé, SSD sain (SMART + auto-test), 30 min de charge à 82 °C sans bridage, réseau I226-V sans erreur | ✅ 2026-10-10 |
 | 2 | Installation Ubuntu | Partitionnement LVM (ADR-003), hostname `prod-01`, utilisateur, OpenSSH | ✅ 2026-10-09 |
 | 3 | Socle OS | IP réservée sur la Livebox, clés SSH (PC Windows + dev-linux), SSH par clé uniquement, mises à jour de sécurité auto, fuseau horaire, swap supprimé, Wi-Fi/BT coupés | ✅ 2026-10-10 |
