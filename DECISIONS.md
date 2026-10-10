@@ -40,6 +40,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : niveau 1 : `kubectl apply -k <dossier>` depuis ce repo. Niveau 2 : Argo CD surveille ces mêmes dossiers et déploie automatiquement.
 - **Pourquoi** : moins de choses à apprendre au départ, sans rien à refaire plus tard.
 
+> ⚠️ ADR-006 est **remplacée par ADR-021** (2026-10-10).
+
 ## ADR-007 — Registre d'images : GHCR
 - **Date** : 2026-10-09 · **Statut** : Acceptée
 - **Décision** : images Docker privées sur GitHub Container Registry. Build sur dev-linux, puis éventuellement GitHub Actions.
@@ -113,10 +115,26 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : fichier `/swap.img` (8 Go, créé par l'installeur) supprimé.
 - **Pourquoi** : Kubernetes gère la mémoire des applications et préfère un nœud sans swap ; 29 Go de RAM disponibles suffisent largement.
 
-## ADR-020 — Pare-feu de l'hôte reporté à la phase 4
-- **Date** : 2026-10-10 · **Statut** : Proposée
+## ADR-020 — Pare-feu de l'hôte (ufw), activé avec K3s
+- **Date** : 2026-10-10 · **Statut** : Acceptée (appliquée)
 - **Décision** : le pare-feu (ufw) sera activé avec K3s, en ouvrant SSH, HTTP/HTTPS, l'API Kubernetes et les réseaux internes de K3s.
 - **Pourquoi** : un pare-feu activé avant K3s sans ses règles bloque le réseau interne des pods. Le serveur n'est de toute façon pas exposé à Internet (aucun port ouvert sur la Livebox, pare-feu IPv6 de la box actif).
+- **Mise en œuvre (2026-10-10)** : `ufw` actif — par défaut tout refusé en entrée ; ouverts : 22 et 6443 depuis `192.168.1.0/24` uniquement, 80/443 depuis partout, réseaux internes K3s `10.42.0.0/16` (pods) et `10.43.0.0/16` (services). Testé : metrics-server, redémarrage de coredns, sortie Internet depuis un pod, SSH.
+- **Limite connue** : le trafic vers les applications (80/443) est aiguillé par Kubernetes avant `ufw`. Le pare-feu protège le serveur lui-même ; la non-exposition des applications repose sur la Livebox (aucune redirection de port, pare-feu IPv6 actif).
+
+## ADR-021 — Déploiement par Helm, manuel, depuis dev-linux ou le PC Windows
+- **Date** : 2026-10-10 · **Statut** : Acceptée · **Remplace** : ADR-006
+- **Contexte** : Gael préfère déployer manuellement en PROD et en PPROD, en complétant un fichier de valeurs puis en lançant une seule commande.
+- **Décision** :
+  1. **Un chart Helm commun** (« chart plateforme ») porte les deux profils `app` et `static` (ADR-005). Chaque projet ne fournit qu'un **fichier de valeurs par environnement** (`values-prod.yaml`, `values-pprod.yaml`), sans écrire de YAML Kubernetes.
+  2. **Une seule commande**, rejouable : `helm upgrade --install <projet> <chart> -n <projet> --create-namespace -f values-prod.yaml --kube-context prod-01`.
+  3. Les applications tierces (cert-manager, wiki, Homepage…) s'installent aussi par leur chart Helm officiel, avec leur fichier de valeurs versionné dans ce repo.
+- **Règles** :
+  - **Le fichier de valeurs déployé est toujours commité dans Git** (sinon la prod ne correspond plus à rien de connu).
+  - **Aucun secret dans un fichier de valeurs** : secrets créés à part (ADR-008).
+  - **Contexte toujours explicite** (`--kube-context prod-01` ou `pprod`) pour ne jamais déployer sur le mauvais serveur.
+- **Pourquoi** : une seule méthode pour tout (ADR-005), un geste simple, un historique et un retour arrière intégrés (`helm history`, `helm rollback`).
+- **Conséquences** : Argo CD (phase 9) devient **optionnel**, à reconsidérer plus tard (il sait lui aussi déployer des charts Helm, rien ne serait perdu). Helm est installé sur le PC Windows et dev-linux en phase 4.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

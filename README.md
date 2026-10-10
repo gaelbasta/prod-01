@@ -48,3 +48,22 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | N100 (`gbaubu02p`) | 192.168.1.51 | E8:FF:1E:D4:F6:07 | ancien K3s |
 
 Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle OS](docs/runbooks/socle-os.md)).
+
+## Kubernetes
+
+| | |
+|---|---|
+| Cluster | K3s v1.36.5, mono-nœud, contexte **`prod-01`** |
+| API | `https://k3s.prod.gba-lab.win:6443` (LAN uniquement) |
+| Applications | `http(s)://<app>.prod.gba-lab.win` (Traefik) |
+| Postes | PC Windows (contexte unique `prod-01`) · dev-linux (défaut `k3d-dev-local`, PROD-01 **toujours** en `--context prod-01`) |
+| Test de fumée | `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → http://test.prod.gba-lab.win |
+
+## Arborescence du repo
+
+| Dossier | Contenu |
+|---|---|
+| `docs/` | architecture, glossaire, standard d'hébergement, runbooks |
+| `k3s/` | configuration K3s versionnée |
+| `scripts/` | reconstruction : `socle-os.sh`, `install-k3s.sh` |
+| `tests/` | tests de fumée |

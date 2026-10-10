@@ -9,7 +9,7 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [audit-materiel.md](audit-materiel.md) (SSD, températures, charge, réseau) | 1 | ✅ |
 | [installation-ubuntu.md](installation-ubuntu.md) | 2 | ✅ |
 | [socle-os.md](socle-os.md) (IP, SSH, mises à jour, swap, radios) | 3 | ✅ |
-| installation-k3s.md | 4 | ⬜ |
+| [installation-k3s.md](installation-k3s.md) (K3s, pare-feu, postes d'admin, test de fumée) | 4 | ✅ |
 | deployer-une-app.md | 5 | ⬜ |
 | sauvegarde-et-restauration.md | 7 | ⬜ |
 | redemarrer-prod-01.md | — | ⬜ |

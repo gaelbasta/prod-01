@@ -1,0 +1,57 @@
+# Test de fumée : vérifie toute la chaîne DNS → pare-feu → Traefik → pod.
+# Déployer :  kubectl --context prod-01 apply -f tests/smoke-whoami.yaml
+# Tester   :  http://test.prod.gba-lab.win  (page texte « Hostname: whoami-… »)
+# Nettoyer :  kubectl --context prod-01 delete namespace test
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami
+  namespace: test
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: whoami }
+  template:
+    metadata:
+      labels: { app: whoami }
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami:latest   # toléré : test jetable
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami
+  namespace: test
+spec:
+  selector: { app: whoami }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whoami
+  namespace: test
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: test.prod.gba-lab.win
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: whoami
+                port:
+                  number: 80

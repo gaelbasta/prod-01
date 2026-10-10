@@ -12,8 +12,8 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | 1 | Audit matériel | BIOS réglé, SSD sain (SMART + auto-test), 30 min de charge à 82 °C sans bridage, réseau I226-V sans erreur | ✅ 2026-10-10 |
 | 2 | Installation Ubuntu | Partitionnement LVM (ADR-003), hostname `prod-01`, utilisateur, OpenSSH | ✅ 2026-10-09 |
 | 3 | Socle OS | IP réservée sur la Livebox, clés SSH (PC Windows + dev-linux), SSH par clé uniquement, mises à jour de sécurité auto, fuseau horaire, swap supprimé, Wi-Fi/BT coupés | ✅ 2026-10-10 |
-| 4 | K3s | Installation mono-nœud, kubectl + k9s sur PROD-01, PC Windows et dev-linux | ⬜ |
-| 5 | HTTPS + modèle d'app | DNS du domaine, certificat wildcard, premier modèle « app » et « static », déploiement par `kubectl apply -k` | ⬜ |
+| 4 | K3s | K3s v1.36.5 mono-nœud, pare-feu ufw, kubectl + k9s + helm sur PROD-01, PC Windows et dev-linux, test de fumée `whoami` OK | ✅ 2026-10-10 |
+| 5 | HTTPS + chart plateforme | Certificat wildcard `*.prod.gba-lab.win`, **chart Helm commun** (profils « app » et « static »), déploiement par `helm upgrade --install` (ADR-021) | ⬜ |
 | 6 | Wiki | MkDocs déployé avec le modèle « static » ; ce repo y devient lisible | ⬜ |
 | 7 | Sauvegardes | restic → disque 3,5" sur le N100 ; **test de restauration réussi** | ⬜ |
 | 8 | PRISM | Mise en production, puis vraies données | ⬜ |
@@ -22,7 +22,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 
 | # | Phase | Contenu | Statut |
 |---|---|---|---|
-| 9 | GitOps | Argo CD : déployer = faire un commit. Reprend les mêmes dossiers que la phase 5, sans rien refaire | ⬜ |
+| 9 | GitOps (optionnel) | Argo CD, à reconsidérer : les déploiements sont manuels par Helm (ADR-021) | ⏸️ |
 | 10 | Secrets dans Git | Sealed Secrets (remplace les secrets créés à la main) | ⬜ |
 | 11 | Monitoring | Capteurs et alertes dans Home Assistant, dont l'alerte « pas de données » | ⬜ |
 | 12 | Accès distant | Tailscale sur PROD-01, mêmes URL dedans et dehors | ⬜ |

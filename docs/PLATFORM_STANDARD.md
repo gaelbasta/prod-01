@@ -37,19 +37,25 @@ Dès le cadrage (étape ajoutée à `PROJECT_BOOTSTRAP.md`) :
 4. **Un dossier `docs/`** en Markdown, agrégé automatiquement dans le wiki.
 5. **Une route de santé** (`/healthz` ou équivalent) pour les profils app, surveillée par Home Assistant.
 
-## Arborescence de déploiement (dans ce repo)
+## Déploiement : Helm (ADR-021)
+
+Un **chart plateforme** commun (construit en phase 5) porte les profils `app` et `static`. Chaque projet fournit seulement ses fichiers de valeurs :
 
 ```
-apps/
-  <projet>/
-    base/            # commun à tous les environnements
-    overlays/
-      pprod/         # différences PPROD (URL, données de test)
-      prod/          # différences PROD
+<projet>/deploy/
+  values-prod.yaml     # PROD-01
+  values-pprod.yaml    # PPROD (N100)
 ```
 
-Déployer (niveau 1) : `kubectl apply -k apps/<projet>/overlays/prod`
-Déployer (niveau 2) : commit + push, Argo CD s'en charge.
+Déployer (depuis dev-linux ou le PC Windows) :
+```bash
+helm upgrade --install <projet> <chart-plateforme> \
+  -n <projet> --create-namespace \
+  -f deploy/values-prod.yaml --kube-context prod-01
+```
+Revenir en arrière : `helm rollback <projet> -n <projet> --kube-context prod-01`.
+
+Règles : fichier de valeurs **commité** avant tout déploiement ; **aucun secret** dedans ; contexte **toujours explicite**.
 
 ## Parcours d'un projet
 

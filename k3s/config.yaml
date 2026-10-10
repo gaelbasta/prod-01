@@ -1,0 +1,7 @@
+# /etc/rancher/k3s/config.yaml — configuration K3s de PROD-01 (ADR-004)
+# Copier sur le serveur AVANT l'installation de K3s.
+node-name: prod-01
+tls-san:
+  - prod-01
+  - 192.168.1.16
+  - k3s.prod.gba-lab.win
