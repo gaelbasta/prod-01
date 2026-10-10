@@ -14,7 +14,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | 3 | Socle OS | IP réservée sur la Livebox, clés SSH (PC Windows + dev-linux), SSH par clé uniquement, mises à jour de sécurité auto, fuseau horaire, swap supprimé, Wi-Fi/BT coupés | ✅ 2026-10-10 |
 | 4 | K3s | K3s v1.36.5 mono-nœud, pare-feu ufw, kubectl + k9s + helm sur PROD-01, PC Windows et dev-linux, test de fumée `whoami` OK | ✅ 2026-10-10 |
 | 5 | HTTPS + chart plateforme | cert-manager v1.21.2 + Let's Encrypt DNS-01 Cloudflare, wildcard `*.prod.gba-lab.win` servi par défaut, redirection HTTP → HTTPS (ADR-022) · chart plateforme 0.1.0 publié sur GHCR, testé k3d puis prod, mises à jour sans coupure (ADR-023) | ✅ 2026-10-10 |
-| 6 | Wiki | MkDocs (thème readthedocs) déployé avec le profil « static » ; ce repo y devient lisible (ADR-024) | 🟨 |
+| 6 | Wiki | MkDocs (thème readthedocs) déployé avec le profil « static » ; ce repo y devient lisible (ADR-024) — https://wiki.prod.gba-lab.win | ✅ 2026-10-10 |
 | 7 | Sauvegardes | restic → disque 3,5" sur le N100 ; **test de restauration réussi** | ⬜ |
 | 8 | PRISM | Mise en production, puis vraies données | ⬜ |
 

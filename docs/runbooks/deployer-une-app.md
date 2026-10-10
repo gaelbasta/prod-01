@@ -42,6 +42,8 @@ unset GH_TOKEN
 Sous PowerShell : `helm registry login ghcr.io -u gaelbasta` (le mot de passe est demandé sans écho).
 Le token est mémorisé dans `~/.config/helm/registry/config.json` : fichier **sensible**, jamais copié ni versionné. Révocation : `helm registry logout ghcr.io` + suppression du token sur GitHub.
 
+**Envoyer des images** (poste qui construit, donc dev-linux) — ✅ dev-linux (2026-10-10) : Docker a **sa propre** connexion, distincte de celle de Helm : `docker login ghcr.io -u gaelbasta` (token `write:packages`). Token mémorisé non chiffré dans `~/.docker/config.json` : fichier sensible. Exemple complet de construction et publication d'une image : [wiki.md](wiki.md).
+
 ## B. Déployer un projet
 
 ### 1. Le fichier de valeurs (dans le repo du projet)
@@ -71,12 +73,13 @@ Profil `static` : `profile: static`, image nginx + fichiers (base `nginxinc/ngin
 
 **Commit + push du fichier AVANT de déployer** (ADR-021). Contrôle : `git status --short` vide.
 
-### 2. Les secrets (si besoin) — 🔜 à valider en phase 8
+### 2. Les secrets (si besoin) — ✅ accès image privée (`ghcr-pull`, wiki, 2026-10-10) · 🔜 variables secrètes (phase 8)
 
 Créés à la main, jamais dans Git (ADR-008) ; documenter leur **emplacement** dans le `docs/` du projet.
 ```bash
 kubectl --context prod-01 create namespace prism
-# Accès à une image privée GHCR (token classic read:packages dédié au cluster) :
+# Accès à une image privée GHCR : token classic « k3s-prod-01-pull » (read:packages, sans expiration,
+# le même pour tous les namespaces — ADR-024), conservé dans le gestionnaire de mots de passe :
 read -rs GH_TOKEN
 kubectl --context prod-01 -n prism create secret docker-registry ghcr-pull \
   --docker-server=ghcr.io --docker-username=gaelbasta --docker-password="$GH_TOKEN"
@@ -171,3 +174,4 @@ Règle (ADR-023) : **une version publiée n'est jamais republiée.** Toute modif
 |---|---|---|
 | 1 requête sur 300 en erreur (502/504) pendant chaque mise à jour, sur k3d | l'ancien pod s'arrêtait avant que Traefik l'ait retiré de sa liste | `lifecycle.preStop.sleep` 5 s (natif Kubernetes, fonctionne même sans shell dans l'image) → 300/300, deux fois sur k3d, une fois sur prod-01 |
 | Site injoignable en 4G | IP privée, par conception (ADR-009) | aucune — Tailscale en phase 12 |
+| (wiki, prod-01) `Readiness probe failed … connection refused` juste après le démarrage | sonde passée avant que nginx écoute (pas de délai initial pour la sonde de disponibilité) | aucune : sans effet (pod `1/1`, 0 redémarrage) ; délai initial à envisager dans une future version du chart |

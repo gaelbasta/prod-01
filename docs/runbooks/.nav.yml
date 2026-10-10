@@ -8,4 +8,6 @@ nav:
   - installation-k3s.md
   - https-certificats.md
   - deployer-une-app.md
-  - "*"               # tout nouveau runbook apparaît ensuite, sans rien oublier
+  - wiki.md
+  - glob: "*"         # tout nouveau runbook apparaît ensuite, sans rien oublier
+    ignore_no_matches: true

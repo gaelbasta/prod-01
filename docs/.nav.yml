@@ -5,4 +5,5 @@ nav:
   - Runbooks: runbooks
   - GLOSSAIRE.md
   - REPRISE.md
-  - "*"               # tout nouveau fichier ou dossier, ensuite
+  - glob: "*"         # tout nouveau fichier ou dossier, ensuite
+    ignore_no_matches: true

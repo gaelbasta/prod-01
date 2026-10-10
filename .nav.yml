@@ -5,4 +5,5 @@ nav:
   - DECISIONS.md
   - Documentation: docs
   - Chart plateforme: charts/plateforme/README.md
-  - "*.md"            # tout nouveau fichier Markdown à la racine, ensuite
+  - glob: "*.md"      # tout nouveau fichier Markdown à la racine, ensuite
+    ignore_no_matches: true

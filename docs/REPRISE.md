@@ -44,22 +44,23 @@ et proposer un nouvel ADR.
   un chart plateforme commun (profils app/static) + values-<env>.yaml par projet.
 
 ## Où on en est
-- Phases 0 à 5 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
-  + postes d'admin, HTTPS + chart plateforme).
-- Phase 5 en bref (2026-10-10, ADR-022 et ADR-023, runbooks https-certificats.md
-  et deployer-une-app.md) :
-  - cert-manager v1.21.2 ; wildcard *.prod.gba-lab.win (Let's Encrypt, DNS-01
-    Cloudflare) servi par défaut par Traefik ; redirection HTTP → HTTPS globale
-    (platform/traefik/helmchartconfig.yaml, syntaxe chart Traefik 40 :
-    ports.web.http.redirections — l'ancienne est ignorée en silence).
-  - Chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé,
-    tag Git plateforme-0.1.0) : profils app/static, sondes, volume conservé,
-    pause d'arrêt 5 s (mises à jour sans coupure, mesuré 300/300).
-  - helm registry login ghcr.io fait sur dev-linux (token write:packages) ;
-    PAS ENCORE sur le PC Windows (token read:packages à créer).
+- Phases 0 à 6 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
+  + postes d'admin, HTTPS + chart plateforme, wiki).
+- Phase 5 en bref (ADR-022, ADR-023) : cert-manager v1.21.2, wildcard
+  *.prod.gba-lab.win servi par défaut par Traefik, redirection HTTP → HTTPS ;
+  chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé).
+  helm registry login ghcr.io fait sur dev-linux ; PAS ENCORE sur le PC Windows.
+- Phase 6 en bref (2026-10-10, ADR-024, runbook wiki.md) :
+  - https://wiki.prod.gba-lab.win : MkDocs 1.6.1 figé, thème readthedocs,
+    plugin awesome-nav 3.3.0 (ordre du menu par fichiers .nav.yml dans les repos).
+  - Repo gaelbasta/wiki (privé, ~/claude-projects/wiki) : projets.txt liste les
+    repos publiés ; scripts/construire.sh les clone depuis GitHub et construit
+    l'image ghcr.io/gaelbasta/wiki:<AAAA.MM.JJ-HHMM> (privée) ; déployé avec le
+    chart plateforme, profil static. Pas de mise à jour automatique.
+  - Images privées : token k3s-prod-01-pull (read:packages, sans expiration),
+    secret ghcr-pull par namespace. docker login ghcr.io fait sur dev-linux.
   - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
-- Prochaine : PHASE 6 — wiki MkDocs (profil static : image nginx + site,
-  agrège les docs/ des projets dont ce repo), premier vrai projet déployé
-  avec le chart.
-- Ensuite : phase 7 sauvegardes (restic → disque 3,5" sur le N100), phase 8 PRISM.
+- Prochaine : PHASE 7 — sauvegardes (restic → disque 3,5" sur le N100, service
+  hors K3s sur le N100, ADR-012) ; validée seulement après un test de restauration.
+- Ensuite : phase 8 PRISM (profil app, données SQLite, secrets à la main).
 ```

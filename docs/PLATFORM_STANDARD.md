@@ -1,6 +1,6 @@
 # Standard d'hébergement PROD-01
 
-> Statut : **en service** depuis la phase 5 (chart plateforme 0.1.0, 2026-10-10). Premier vrai projet : wiki (phase 6).
+> Statut : **en service** depuis la phase 5 (chart plateforme 0.1.0, 2026-10-10). Premier vrai projet : wiki (phase 6, profil static, image privée).
 > Référencé par `METHOD.md` et `PROJECT_BOOTSTRAP.md`.
 
 ## Règle d'or
@@ -35,7 +35,7 @@ Dès le cadrage (étape ajoutée à `PROJECT_BOOTSTRAP.md`) :
 1. **Profil d'hébergement** : static ou app.
 2. **Données** : quoi, où, taille estimée, comment les sauvegarder (dump SQLite, etc.).
 3. **Accès** : LAN seul / famille via Tailscale / public.
-4. **Un dossier `docs/`** en Markdown, agrégé automatiquement dans le wiki.
+4. **Un dossier `docs/`** en Markdown, publié dans le wiki (une ligne dans `projets.txt` du repo wiki ; ordre du menu via des fichiers `.nav.yml` facultatifs — runbook [wiki.md](runbooks/wiki.md), ADR-024).
 5. **Une route de santé** (`/healthz` ou équivalent) pour les profils app, surveillée par Home Assistant.
 
 ## Déploiement : Helm (ADR-021, ADR-023)

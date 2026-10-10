@@ -189,6 +189,10 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Le wiki n'est **pas mis à jour automatiquement** : après un push de doc, reconstruire et redéployer (runbook `wiki.md`). Automatisation possible plus tard.
   - Les dépôts sont téléchargés avec la clé SSH GitHub de dev-linux : la construction se fait sur dev-linux.
   - Sortie de MkDocs 1.x à réévaluer (Zensical stable, ou MkDocs 2.0) : Zensical reprend l'apparence Material, pas readthedocs. Le Markdown, lui, reste identique.
+- **Mise en œuvre (2026-10-10)** :
+  - Wiki en service sur `https://wiki.prod.gba-lab.win` : image `2026.10.10-1638` (28 Mo), révision Helm 1, chart plateforme 0.1.0. Vérifié : HTTPS valide, 308 → HTTPS, PC et téléphone en Wi-Fi. Runbook : `docs/runbooks/wiki.md`.
+  - **Accès du cluster aux images privées GHCR** (premier usage réel, valable pour tous les projets) : **un seul** token GitHub classic `k3s-prod-01-pull`, scope `read:packages`, **sans expiration** (même raisonnement que le token Cloudflare, ADR-022 : une expiration bloquerait un futur déploiement sans prévenir ; risque limité à la lecture des paquets). Rangé dans le gestionnaire de mots de passe ; dans le cluster, un secret `ghcr-pull` **par namespace** qui en a besoin (ADR-008).
+  - Docker de dev-linux connecté à GHCR (`docker login ghcr.io`, token `write:packages`), en plus de Helm.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
