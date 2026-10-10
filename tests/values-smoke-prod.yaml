@@ -1,0 +1,13 @@
+# Test du chart plateforme publié (GHCR) sur PROD-01 — répétition générale d'un vrai projet.
+# Déployer : helm upgrade --install smoke oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+#              -n smoke --create-namespace -f tests/values-smoke-prod.yaml --kube-context prod-01 --wait
+# Tester   : https://smoke.prod.gba-lab.win  (cadenas valide, page « Hostname: smoke-… »)
+# Nettoyer : helm uninstall smoke -n smoke --kube-context prod-01
+#            kubectl --context prod-01 delete namespace smoke
+profile: app
+image:
+  repository: traefik/whoami
+  tag: "v1.10.1"
+port: 80
+healthPath: /health
+host: smoke.prod.gba-lab.win
