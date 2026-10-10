@@ -1,0 +1,11 @@
+# Certificat par défaut de Traefik = wildcard *.prod.gba-lab.win (ADR-022)
+# Appliquer : kubectl --context prod-01 apply -f platform/traefik/tlsstore-default.yaml
+# Le nom « default » est imposé par Traefik ; le coffre doit être dans le même namespace.
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: kube-system
+spec:
+  defaultCertificate:
+    secretName: wildcard-prod-tls   # produit par platform/cert-manager/wildcard-prod.yaml
