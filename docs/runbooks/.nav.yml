@@ -9,5 +9,6 @@ nav:
   - https-certificats.md
   - deployer-une-app.md
   - wiki.md
+  - installation-pprod-01.md
   - glob: "*"         # tout nouveau runbook apparaît ensuite, sans rien oublier
     ignore_no_matches: true

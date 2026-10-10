@@ -82,6 +82,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Pourquoi** : une sauvegarde sur une autre machine survit à la perte de PROD-01.
 - **Conséquences** : un seul disque = pas de redondance (transitoire). Une sauvegarde n'est validée qu'après un **test de restauration**. Le mot de passe restic est conservé hors de PROD-01.
 
+> Mise en œuvre précisée par **ADR-027** (2026-10-10) : rest-server en append-only, mot de passe aussi dans le gestionnaire de mots de passe.
+
 ## ADR-013 — Surveillance par Home Assistant
 - **Date** : 2026-10-09 · **Statut** : Acceptée
 - **Décision** : HA surveille PROD-01 depuis l'extérieur : ping, check HTTP de chaque app, métriques de l'hôte. Alerte prioritaire : **absence de données**.
@@ -92,6 +94,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : le N100 est réinstallé (ISO propre) après PROD-01 et devient la PPROD.
 - **Conditions** : identique à la PROD par construction (mêmes scripts, mêmes manifestes, overlays `pprod`/`prod`) ; **aucune donnée réelle** (PRISM avec données de test).
 - **Conséquences** : la réinstallation du N100 sert de premier test de reconstruction. Le disque de sauvegarde devra être remonté après la réinstallation.
+
+> Précisée par **ADR-026** (2026-10-10) : réinstallation (OS + socle) avancée en phase 7, avant l'arrivée du disque ; nom `pprod-01`.
 
 ## ADR-016 — Secure Boot désactivé
 - **Date** : 2026-10-09 · **Statut** : Acceptée
@@ -209,6 +213,43 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Les limites « readthedocs » de l'ADR-024 disparaissent. Le passage futur à Zensical (successeur de Material) se fera sans changement d'apparence.
   - Material affiche à chaque construction un avertissement sur MkDocs 2.0 : informatif, sans effet tant que MkDocs reste figé en 1.6.1.
 - **Mise en œuvre (2026-10-10)** : image `2026.10.10-1715`, révision Helm 3 (révision 2 = essai readthedocs `2026.10.10-1700`). Vérifié en local puis en production, PC et téléphone.
+
+## ADR-026 — Le N100 est réinstallé dès la phase 7 (OS + socle), sous le nom `pprod-01`
+- **Date** : 2026-10-10 · **Statut** : Acceptée · **Précise** : ADR-014, ADR-012
+- **Contexte** : la phase 7 installe le service de sauvegarde sur le N100 (ADR-012), qui doit de toute façon être réinstallé (ADR-014). État constaté le 2026-10-10 : Ubuntu **24.04.2 Desktop**, ancien K3s portant une version de numobserver **abandonnée**, aucune donnée à conserver (décision de Gael, pas de copie). Le disque 3,5" de sauvegarde n'arrivera que le 13 ou le 14 octobre.
+- **Décision** :
+  1. Réinstaller le N100 **maintenant**, avant l'arrivée du disque : Ubuntu Server 26.04.1 LTS (même clé USB que PROD-01), puis `scripts/socle-os.sh`. **Pas de K3s** à ce stade : la PPROD proprement dite reste en phase 14.
+  2. Nom de machine **`pprod-01`** (ex-`gbaubu02p`). IP inchangée `192.168.1.51` (bail statique existant). Clé SSH par poste : `id_ed25519_pprod_01`, alias SSH `pprod-01`.
+  3. Partitionnement calqué sur l'ADR-003, adapté au SSD de 512 Go : `/boot/efi` 1 Go, `/boot` 2 Go, LVM `vg0` : `root` 80 Go sur `/`, `rancher` 200 Go sur `/var/lib/rancher` (future PPROD), ~190 Go laissés libres. Le disque de sauvegarde reste **séparé** (ADR-027).
+- **Pourquoi** :
+  - Le disque de sauvegarde n'est pas branché pendant la réinstallation : **aucun risque de le formater par erreur**, et pas besoin de le débrancher/rebrancher plus tard.
+  - Le service de sauvegarde est installé **une seule fois**, sur un système propre, identique à PROD-01.
+  - Premier essai réel de `socle-os.sh` sur une autre machine que PROD-01 (objectif initial de la phase 14).
+- **Conséquences** :
+  - La phase 14 se réduit à : K3s, wildcard `*.pprod.gba-lab.win`, déploiements PPROD.
+  - Nouvelle clé d'hôte SSH : effacer l'ancienne empreinte de `192.168.1.51` sur les postes (`ssh-keygen -R`). Les anciens contextes kubectl vers le K3s du N100 deviennent obsolètes.
+  - Mode opératoire : [runbook installation-pprod-01.md](docs/runbooks/installation-pprod-01.md).
+
+## ADR-027 — Sauvegardes : restic sur PROD-01 → rest-server « append-only » sur `pprod-01`
+- **Date** : 2026-10-10 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-012
+- **Décision** :
+  1. **Sur `pprod-01` (le coffre)** : le disque 3,5" (ext4, étiquette `sauvegardes`) est monté sur `/srv/sauvegardes` **par son UUID**, avec l'option `nofail` (le N100 démarre même disque débranché). **rest-server** y tourne comme service systemd (hors K3s, ADR-012), sous un utilisateur système dédié, en mode **`--append-only`**, protégé par un identifiant/mot de passe (htpasswd). Pare-feu `ufw` : port de rest-server ouvert **à 192.168.1.16 uniquement**, SSH depuis le LAN.
+  2. **Sur PROD-01 (le déposant)** : restic, lancé **chaque nuit** par un timer systemd. Le script (versionné dans `scripts/`) :
+     - fait d'abord une **copie cohérente** de la base de K3s (SQLite `state.db`, via la sauvegarde en ligne de SQLite) ;
+     - sauvegarde `/etc`, `/var/lib/rancher/k3s/server` (dont le fichier **`token`**, sans lequel la base est inutilisable ; base vivante exclue au profit de la copie), `/var/lib/rancher/k3s/storage` (volumes des apps) ;
+     - prévoit un emplacement pour le **dump propre des bases d'apps** (PRISM, phase 8) ;
+     - exclut ce qui se retélécharge (images de conteneurs, `/var/lib/rancher/k3s/agent`) ;
+     - laisse une trace de la dernière sauvegarde réussie (pour Home Assistant, phase 11).
+  3. **Tri des anciennes sauvegardes** (`restic forget --prune`) et **contrôle d'intégrité** (`restic check`) : exécutés **sur `pprod-01`**, directement sur le dossier du dépôt, puisque PROD-01 n'a pas le droit d'effacer. Rétention et horaires fixés à la mise en œuvre.
+  4. **Mot de passe restic** : fichier lisible par root seul sur PROD-01 (nécessaire pour sauvegarder) et sur `pprod-01` (pour le tri), **plus une copie obligatoire dans le gestionnaire de mots de passe**. C'est ainsi qu'on lit la phrase de l'ADR-012 « conservé hors de PROD-01 » : sans cette copie, la perte de PROD-01 rendrait les sauvegardes illisibles. Même règle pour l'identifiant rest-server.
+- **Pourquoi** :
+  - **Append-only** : si PROD-01 est piraté ou si une commande erronée y est tapée, il peut **déposer** mais **jamais effacer** les sauvegardes existantes.
+  - *Alternative écartée* : SFTP par SSH vers le N100 — plus simple, mais PROD-01 pourrait tout effacer.
+  - restic chiffre **avant** l'envoi : le trafic HTTP sur le LAN ne transporte que des données chiffrées. Seul l'identifiant rest-server circule en clair sur le LAN, et il ne permet que d'ajouter. Limite connue et acceptée (TLS possible plus tard).
+- **Validation de la phase 7** : 3 tests de restauration réussis — (1) un fichier de `/etc` restauré et comparé à l'original ; (2) la base K3s restaurée et vérifiée (`PRAGMA integrity_check`) ; (3) un volume de test (chart plateforme) écrit, sauvegardé, supprimé, puis restauré.
+- **Conséquences** :
+  - Un seul disque = pas de redondance (transitoire, ADR-012) ; migration vers le NAS en phase 16.
+  - Mode opératoire : `docs/runbooks/sauvegarde-et-restauration.md` (écrit pendant la phase 7).
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

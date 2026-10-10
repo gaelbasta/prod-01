@@ -23,7 +23,8 @@ et proposer un nouvel ADR.
   (DNS only). La Livebox ne bloque pas le rebinding (testé).
 - Repo : github.com/gaelbasta/prod-01 (privé), copie de travail
   ~/claude-projects/prod-01 sur dev-linux (~/projects est réservé aux projets Codex).
-- N100 (gbaubu02p, 192.168.1.51) : future PPROD, à réinstaller avec scripts/.
+- pprod-01 (N100, ex-gbaubu02p, 192.168.1.51) : réinstallé en phase 7 (ADR-026),
+  cible de sauvegarde (ADR-027), future PPROD (phase 14). `ssh pprod-01`.
 
 ## Ma façon de travailler (important)
 - Je ne suis pas expert Git ni Kubernetes : guide-moi UNE ÉTAPE À LA FOIS,
@@ -62,7 +63,15 @@ et proposer un nouvel ADR.
   - Images privées : token k3s-prod-01-pull (read:packages, sans expiration),
     secret ghcr-pull par namespace. docker login ghcr.io fait sur dev-linux.
   - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
-- Prochaine : PHASE 7 — sauvegardes (restic → disque 3,5" sur le N100, service
-  hors K3s sur le N100, ADR-012) ; validée seulement après un test de restauration.
+- PHASE 7 EN COURS — sauvegardes (ADR-026, ADR-027) :
+  - Décidé le 2026-10-10 : N100 réinstallé AVANT l'arrivée du disque 3,5" (prévu
+    13–14 oct.) en Ubuntu Server 26.04.1 + socle-os.sh, nom pprod-01, sans K3s
+    (runbook installation-pprod-01.md). numobserver abandonné, rien conservé.
+  - Architecture : restic sur PROD-01 (timer nocturne, copie SQLite de K3s + token,
+    /etc, volumes) → rest-server --append-only sur pprod-01, disque monté
+    /srv/sauvegardes (UUID, nofail), ufw limité à 192.168.1.16 ; forget/prune/check
+    sur pprod-01 ; mot de passe restic aussi dans le gestionnaire de mots de passe.
+  - Validation : 3 tests de restauration (/etc, base K3s, volume de test).
+  - Où j'en suis : ⚠️ METTRE À JOUR (réinstallation faite ? disque branché ?).
 - Ensuite : phase 8 PRISM (profil app, données SQLite, secrets à la main).
 ```

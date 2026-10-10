@@ -40,6 +40,7 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **PWA** | Un site web installable comme une app sur téléphone. Exige HTTPS. | Un raccourci qui se prend pour une vraie app. |
 | **Redirection 308** | Réponse « cette page est définitivement à cette autre adresse » : ici tout `http://` vers `https://`. | Un panneau « entrée par l'autre porte ». |
 | **restic** | Outil de sauvegarde chiffrée et dédupliquée. | Un coffre-fort qui ne stocke qu'une fois ce qui ne change pas. |
+| **rest-server (append-only)** | Petit serveur qui reçoit les sauvegardes restic. En mode *append-only*, il accepte les nouveaux dépôts mais refuse toute suppression venant du client (ADR-027). | Une boîte aux lettres : on peut y glisser du courrier, pas le reprendre. |
 | **Rollback** | Retour à une version précédente d'un déploiement Helm (`helm rollback`) ; ajoute une ligne à l'historique, n'efface rien. | La touche « annuler », avec trace. |
 | **Runbook** | Une procédure pas-à-pas pour une opération (dans `docs/runbooks/`). | Une fiche recette. |
 | **Sealed Secrets** | Secrets chiffrés qu'on peut ranger dans Git sans risque. | Une lettre sous enveloppe scellée que seul PROD-01 sait ouvrir. |

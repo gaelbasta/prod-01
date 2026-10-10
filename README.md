@@ -34,7 +34,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | Nom | Matériel | Rôle | État |
 |---|---|---|---|
 | PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | K3s + HTTPS en service |
-| N100 (`gbaubu02p`) | Mini-PC Intel N100 | PPROD + cible de sauvegarde transitoire | À réinstaller après PROD-01 |
+| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Réinstallation en cours (phase 7, ADR-026) |
 | dev-linux | Workstation Ubuntu | Développement et build | En service |
 | Home Assistant | — | Surveillance et alertes | En service |
 | PC Windows (`DESKTOP-8IUGODI`) | MSI MS-7B17 | Poste d'administration (SSH, kubectl, k9s) | En service |
@@ -47,7 +47,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | dev-linux | 192.168.1.19 | 38:7C:76:4F:B0:DA | |
 | Home Assistant | 192.168.1.26 | 20:F8:3B:03:E0:97 | |
 | PC Windows | 192.168.1.31 | 00:D8:61:17:BC:FB | |
-| N100 (`gbaubu02p`) | 192.168.1.51 | E8:FF:1E:D4:F6:07 | ancien K3s |
+| `pprod-01` (N100) | 192.168.1.51 | E8:FF:1E:D4:F6:07 | ex-`gbaubu02p` ; réinstallé en phase 7 (ADR-026) |
 
 Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle OS](docs/runbooks/socle-os.md)).
 
@@ -75,5 +75,5 @@ Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle
 | `k3s/` | configuration K3s versionnée |
 | `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
 | `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
-| `scripts/` | reconstruction : `socle-os.sh`, `install-k3s.sh` |
+| `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh` |
 | `tests/` | tests de fumée (manifeste brut, valeurs du chart pour k3d et prod) |
