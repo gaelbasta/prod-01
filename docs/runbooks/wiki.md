@@ -1,7 +1,7 @@
 # Wiki : construire, publier, mettre à jour
 
-**Quoi** : le wiki `https://wiki.prod.gba-lab.win` (LAN) rassemble la doc Markdown des repos listés dans le repo **wiki**, la transforme en site (MkDocs 1.6, thème readthedocs) et la sert avec nginx sur PROD-01 (chart plateforme, profil `static`).
-**Mis en service le** : 2026-10-10 (phase 6) · **Décisions** : [ADR-011](../../DECISIONS.md), [ADR-024](../../DECISIONS.md), [ADR-023](../../DECISIONS.md)
+**Quoi** : le wiki `https://wiki.prod.gba-lab.win` (LAN) rassemble la doc Markdown des repos listés dans le repo **wiki**, la transforme en site (MkDocs 1.6, thème Material) et la sert avec nginx sur PROD-01 (chart plateforme, profil `static`).
+**Mis en service le** : 2026-10-10 (phase 6) · **Décisions** : [ADR-011](../../DECISIONS.md), [ADR-024](../../DECISIONS.md), [ADR-025](../../DECISIONS.md), [ADR-023](../../DECISIONS.md)
 **Repo** : `github.com/gaelbasta/wiki` (privé) — copie de travail `~/claude-projects/wiki` sur **dev-linux** · **Image** : `ghcr.io/gaelbasta/wiki` (privée)
 
 > Tout ce qui suit se fait sur **dev-linux** (invite `gael@dev-linux`) : la construction télécharge les repos avec la clé SSH GitHub de ce poste.
@@ -46,7 +46,7 @@ projets.txt ──► scripts/construire.sh ──► image ghcr.io/gaelbasta/wi
 cd ~/claude-projects/wiki
 ./scripts/construire.sh 2>&1 | tee build.log | grep -E '^==>|WARNING|ERROR|ERREUR|Error|Documentation built|^Image'
 ```
-Attendu : `Documentation built`, aucun `WARNING` (un WARNING = lien cassé ou `.nav.yml` incorrect : corriger dans le repo concerné, push, recommencer), et la ligne `Image : ghcr.io/gaelbasta/wiki:<tag>`.
+Attendu : `Documentation built`, aucun `WARNING` (l'encadré « Warning from the Material for MkDocs team » sur MkDocs 2.0, visible dans `build.log`, est informatif — ADR-025) (un WARNING = lien cassé ou `.nav.yml` incorrect : corriger dans le repo concerné, push, recommencer), et la ligne `Image : ghcr.io/gaelbasta/wiki:<tag>`.
 
 **Tester en local** (facultatif, conseillé si `mkdocs.yml` ou l'aspect a changé) :
 ```bash
@@ -116,4 +116,5 @@ Puis navigateur du PC et du téléphone **en Wi-Fi** : cadenas valide, menu, rec
 | `WARNING awesome-nav: The nav item '*' doesn't match…` | le joker final ne trouve rien quand toutes les pages sont listées | `glob: "*"` + `ignore_no_matches: true` |
 | Premier `curl` local muet | lancé avant le démarrage de nginx | `sleep 2` avant le test |
 | `Readiness probe failed … connection refused` au démarrage du pod | sonde passée une fraction de seconde avant que nginx écoute | aucune (le test suivant passe, pod `1/1`, 0 redémarrage) ; délai initial possible dans une future version du chart |
-| Thème Material d'abord choisi | Gael préfère le rendu Read the Docs | thème `readthedocs` intégré à MkDocs (ADR-024) |
+| Thème Material d'abord choisi | Gael préfère le rendu Read the Docs | thème `readthedocs` intégré à MkDocs (ADR-024), révision 2 |
+| En ligne : blocs de commandes dans les listes numérotées aplatis, sous-listes à 2 espaces aplaties (alors que VS Code les affiche bien) | MkDocs lit le Markdown avec Python-Markdown, plus strict que VS Code/GitHub — pas un problème de thème | extensions `pymdownx.superfences` + `mdx_truly_sane_lists` ; retour au thème Material (bouton « copier », mode sombre) — ADR-025 ; rendu vérifié sur toute la doc avant déploiement |

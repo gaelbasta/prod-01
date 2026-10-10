@@ -50,9 +50,11 @@ et proposer un nouvel ADR.
   *.prod.gba-lab.win servi par défaut par Traefik, redirection HTTP → HTTPS ;
   chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé).
   helm registry login ghcr.io fait sur dev-linux ; PAS ENCORE sur le PC Windows.
-- Phase 6 en bref (2026-10-10, ADR-024, runbook wiki.md) :
-  - https://wiki.prod.gba-lab.win : MkDocs 1.6.1 figé, thème readthedocs,
-    plugin awesome-nav 3.3.0 (ordre du menu par fichiers .nav.yml dans les repos).
+- Phase 6 en bref (2026-10-10, ADR-024 et ADR-025, runbook wiki.md) :
+  - https://wiki.prod.gba-lab.win : MkDocs 1.6.1 figé, thème Material 9.7.7
+    (ADR-025, après un essai readthedocs), plugin awesome-nav 3.3.0 (ordre du menu
+    par fichiers .nav.yml dans les repos), extensions superfences + truly_sane_lists
+    pour un rendu identique à VS Code.
   - Repo gaelbasta/wiki (privé, ~/claude-projects/wiki) : projets.txt liste les
     repos publiés ; scripts/construire.sh les clone depuis GitHub et construit
     l'image ghcr.io/gaelbasta/wiki:<AAAA.MM.JJ-HHMM> (privée) ; déployé avec le

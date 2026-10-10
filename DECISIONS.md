@@ -73,7 +73,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : documentation en Markdown dans Git, rendue en site par MkDocs (ou son successeur, à vérifier à l'installation). Le wiki **agrège** le dossier `docs/` de chaque projet.
 - **Pourquoi** : la doc vit avec le code, est versionnée, et Claude/Codex peuvent l'écrire directement.
 
-> Outil et organisation précisés par **ADR-024** (2026-10-10) : MkDocs 1.6 figé, thème readthedocs, repo `wiki`.
+> Outil et organisation précisés par **ADR-024** (2026-10-10) : MkDocs 1.6 figé, repo `wiki` ; thème Material (**ADR-025**).
 
 ## ADR-012 — Sauvegardes
 - **Date** : 2026-10-09 · **Statut** : Acceptée
@@ -176,6 +176,9 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 
 ## ADR-024 — Wiki : MkDocs 1.6 figé, thème readthedocs, repo `wiki` qui rassemble les docs
 - **Date** : 2026-10-10 · **Statut** : Acceptée · **Précise** : ADR-011, ADR-005, ADR-023
+
+> ⚠️ Le **thème** (point 1) est **remplacé par ADR-025** (Material + extensions) ; le reste de cet ADR s'applique.
+
 - **Contexte** : ADR-011 demandait de vérifier à l'installation « MkDocs ou son successeur ». État au 2026-10-10 : MkDocs 1.6.1 (2024) est la dernière version stable ; **MkDocs 2.0** est en préversion et supprime les plugins ; l'équipe de Material for MkDocs développe désormais **Zensical**, encore en alpha (0.1.0 annoncée pour le 5 novembre 2026).
 - **Décision** :
   1. **MkDocs 1.6.1 figé** (`requirements.txt` du repo `wiki`), avec son thème intégré **`readthedocs`** (préférence de Gael, habitué à ce rendu) et le plugin **awesome-nav 3.3.0** pour l'ordre du menu.
@@ -193,6 +196,18 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Wiki en service sur `https://wiki.prod.gba-lab.win` : image `2026.10.10-1638` (28 Mo), révision Helm 1, chart plateforme 0.1.0. Vérifié : HTTPS valide, 308 → HTTPS, PC et téléphone en Wi-Fi. Runbook : `docs/runbooks/wiki.md`.
   - **Accès du cluster aux images privées GHCR** (premier usage réel, valable pour tous les projets) : **un seul** token GitHub classic `k3s-prod-01-pull`, scope `read:packages`, **sans expiration** (même raisonnement que le token Cloudflare, ADR-022 : une expiration bloquerait un futur déploiement sans prévenir ; risque limité à la lecture des paquets). Rangé dans le gestionnaire de mots de passe ; dans le cluster, un secret `ghcr-pull` **par namespace** qui en a besoin (ADR-008).
   - Docker de dev-linux connecté à GHCR (`docker login ghcr.io`, token `write:packages`), en plus de Helm.
+
+## ADR-025 — Wiki : thème Material et lecture du Markdown « comme VS Code »
+- **Date** : 2026-10-10 · **Statut** : Acceptée · **Remplace** : le choix du thème de l'ADR-024 (point 1)
+- **Contexte** : en production, le wiki (thème readthedocs) affichait mal certaines pages : blocs de commandes placés dans une liste numérotée aplatis en texte, sous-listes indentées de 2 espaces aplaties (ADR, runbooks). Cause : MkDocs lit le Markdown avec Python-Markdown, **plus strict** que VS Code et GitHub (CommonMark) — ce n'était pas le thème.
+- **Décision** :
+  1. Thème **Material for MkDocs 9.7.7** (figé) : mode sombre automatique, onglets, bouton « copier » sur les blocs de commandes (utile pour les runbooks).
+  2. Extensions de compatibilité, pour que la doc s'écrive comme aujourd'hui dans VS Code : `pymdownx.superfences` (blocs de code dans les listes), `mdx_truly_sane_lists` 1.3 (sous-listes à 2 espaces), `pymdownx.tasklist` (cases à cocher).
+- **Pourquoi** : on adapte le wiki à la façon d'écrire, pas l'inverse. Rendu vérifié avant déploiement sur toute la doc de prod-01 (MkDocs 1.6.1 + Material 9.7.7).
+- **Conséquences** :
+  - Le reste de l'ADR-024 est inchangé (MkDocs 1.6.1 figé, repo `wiki`, périmètres, `.nav.yml`, image privée).
+  - Les limites « readthedocs » de l'ADR-024 disparaissent. Le passage futur à Zensical (successeur de Material) se fera sans changement d'apparence.
+  - Material affiche à chaque construction un avertissement sur MkDocs 2.0 : informatif, sans effet tant que MkDocs reste figé en 1.6.1.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

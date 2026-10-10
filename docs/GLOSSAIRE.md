@@ -29,7 +29,7 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **Let's Encrypt (staging / production)** | Autorité gratuite qui délivre les certificats HTTPS. Le staging est un bac à sable (certificats non reconnus, quotas larges) pour tester sans risque. | La répétition avant l'examen officiel. |
 | **LVM** | Une couche qui découpe le disque en volumes redimensionnables. | Des cloisons amovibles au lieu de murs porteurs. |
 | **Manifeste** | Un fichier YAML qui décrit ce qu'on veut dans le cluster. | Une commande passée au restaurant. |
-| **MkDocs** | Outil qui transforme des fichiers Markdown en site web de documentation (ici avec le thème readthedocs). | Un imprimeur qui relie tes fiches en un livre. |
+| **MkDocs** | Outil qui transforme des fichiers Markdown en site web de documentation (ici avec le thème Material). | Un imprimeur qui relie tes fiches en un livre. |
 | **Namespace** | Un compartiment du cluster ; un par projet. | Un tiroir par projet. |
 | **NUT** | Logiciel qui lit l'état de l'onduleur et éteint proprement les machines. | Le gardien qui ferme la boutique avant la coupure. |
 | **Paquet OCI / registre** | Format « image de conteneur » utilisé aussi pour ranger des charts Helm dans GHCR (`oci://ghcr.io/…`). | Le même entrepôt pour les plats et les moules. |
