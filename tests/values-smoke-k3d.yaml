@@ -1,0 +1,13 @@
+# Test du chart plateforme sur le cluster de dev local (k3d-dev-local).
+# Déployer : helm upgrade --install smoke charts/plateforme -n smoke --create-namespace \
+#              -f tests/values-smoke-k3d.yaml --kube-context k3d-dev-local --wait
+# Tester   : curl http://test.localhost:8080      et   curl -k https://test.localhost:8443
+# Nettoyer : helm uninstall smoke -n smoke --kube-context k3d-dev-local
+#            kubectl --context k3d-dev-local delete namespace smoke
+profile: app
+image:
+  repository: traefik/whoami
+  tag: "v1.10.1"
+port: 80
+healthPath: /health
+host: test.localhost

@@ -1,0 +1,55 @@
+# Valeurs par défaut du chart plateforme.
+# Un projet ne recopie PAS ce fichier : son values-<env>.yaml ne contient que ce qui change.
+# Référence complète : charts/plateforme/README.md
+
+# Profil d'hébergement (ADR-005) : « app » (serveur applicatif) ou « static » (nginx + fichiers).
+profile: app
+
+image:
+  repository: ""            # OBLIGATOIRE — ex. ghcr.io/gaelbasta/prism
+  tag: ""                   # OBLIGATOIRE — version figée, jamais « latest » (ex. 1.0.0)
+  pullPolicy: IfNotPresent
+
+# Noms de secrets (créés à la main, ADR-008) donnant accès à une image privée GHCR (ADR-007).
+imagePullSecrets: []        # ex. [ghcr-pull]
+
+# Adresse publique de l'app. OBLIGATOIRE — ex. prism.prod.gba-lab.win
+host: ""
+
+# HTTPS : ajoute le bloc tls à l'Ingress ; le certificat wildcard par défaut de Traefik est utilisé (ADR-022).
+tls: true
+
+# Port écouté par le conteneur. Vide = 8000 (app) ou 8080 (static, image nginx-unprivileged).
+port: null
+
+# Route de santé (surveillée par Kubernetes, puis Home Assistant). Vide = /healthz (app) ou / (static).
+healthPath: null
+
+# Arguments passés au conteneur (rarement utile).
+args: []
+
+replicas: 1
+
+# Variables d'environnement NON secrètes.
+env: {}                     # ex. { TZ: Europe/Paris, LOG_LEVEL: info }
+
+# Secrets (créés à la main, ADR-008) dont toutes les clés deviennent des variables d'environnement.
+secretEnv: []               # ex. [prism-secrets]
+
+# Volume de données (profil app uniquement). Conservé même après « helm uninstall ».
+persistence:
+  enabled: false
+  size: 1Gi
+  mountPath: /data
+  storageClass: ""          # vide = stockage local K3s (local-path, dans /var/lib/rancher)
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault

@@ -152,6 +152,21 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - La PPROD aura son propre wildcard `*.pprod.gba-lab.win` (même méthode, son propre token).
   - Redirection automatique HTTP → HTTPS : pas encore en place (à traiter avec le chart plateforme).
 
+## ADR-023 — Chart plateforme : publié sur GHCR, redirection HTTPS globale, static = image nginx
+- **Date** : 2026-10-10 · **Statut** : Acceptée (mise en œuvre en phase 5) · **Précise** : ADR-005, ADR-021
+- **Décision** :
+  1. **Le chart plateforme** est développé dans ce repo (`charts/plateforme/`) et **publié sur GHCR** en version figée (`oci://ghcr.io/gaelbasta/charts/plateforme`, `--version 0.1.0`). Chaque projet déploie avec une version explicite, notée dans l'en-tête de son `values-<env>.yaml`. **Une version publiée n'est jamais republiée** : toute modification du chart = nouvelle version.
+  2. **Redirection HTTP → HTTPS globale**, configurée une fois dans Traefik (K3s `HelmChartConfig`, versionnée dans `platform/traefik/`). Le chart ne gère pas de redirection.
+  3. **Profil static = une image** (nginx + fichiers du site, base conseillée `nginxinc/nginx-unprivileged`, port 8080) construite par le projet et poussée sur GHCR, exactement comme une app.
+  4. Garde-fous dans le chart : valeurs inconnues refusées (`values.schema.json`, contre les fautes de frappe), image/tag/host obligatoires, `latest` interdit, volume de données **conservé** après `helm uninstall` (`helm.sh/resource-policy: keep`).
+- **Pourquoi** :
+  1. Une évolution du chart ne modifie jamais un projet « en douce » au prochain déploiement ; les postes n'ont pas besoin d'une copie du repo prod-01 ; même registre que les images (ADR-007).
+  2. Une seule configuration pour toutes les apps, aucun oubli possible ; sans risque car les certificats sont validés par DNS (ADR-022), jamais par HTTP.
+  3. Un seul parcours (build → GHCR → `helm upgrade`), retour arrière par version, rien à sauvegarder pour un site statique.
+- **Conséquences** :
+  - Les postes d'administration se connectent une fois à GHCR (`helm registry login ghcr.io`, token GitHub `read:packages`, et `write:packages` sur dev-linux pour publier). Le cluster, lui, ne télécharge jamais le chart (seulement les images).
+  - Le chart est d'abord testé sur `k3d-dev-local` (`helm lint` puis déploiement) avant toute publication.
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.

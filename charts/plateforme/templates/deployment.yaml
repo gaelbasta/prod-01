@@ -1,0 +1,85 @@
+{{- include "plateforme.validate" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "plateforme.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  {{- if .Values.persistence.enabled }}
+  strategy:
+    type: Recreate   # volume local : l'ancien pod s'arrête avant que le nouveau démarre
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "plateforme.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "plateforme.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ include "plateforme.port" . }}
+          {{- with .Values.env }}
+          env:
+            {{- range $nom, $valeur := . }}
+            - name: {{ $nom }}
+              value: {{ $valeur | toString | quote }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.secretEnv }}
+          envFrom:
+            {{- range . }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          {{- end }}
+          readinessProbe:          # « prêt à recevoir du trafic ? »
+            httpGet:
+              path: {{ include "plateforme.healthPath" . }}
+              port: http
+            periodSeconds: 10
+          livenessProbe:           # « toujours vivant ? » sinon redémarrage
+            httpGet:
+              path: {{ include "plateforme.healthPath" . }}
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data
+      {{- end }}

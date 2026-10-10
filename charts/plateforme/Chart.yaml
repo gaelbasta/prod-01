@@ -1,0 +1,7 @@
+apiVersion: v2
+name: plateforme
+description: Chart commun PROD-01 / PPROD — profils « app » et « static » (ADR-005, ADR-021, ADR-023)
+type: application
+# Version du chart : à augmenter à CHAQUE modification avant publication sur GHCR
+# (0.1.1 = correctif, 0.2.0 = nouvelle option). Une version publiée n'est jamais republiée.
+version: 0.1.0
