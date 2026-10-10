@@ -2,6 +2,8 @@
 
 > **Tu es perdu ? Commence ici.** Ce fichier est le point d'entrée unique.
 > Tout ce qui concerne PROD-01 est dans ce repo : décisions, procédures, configuration.
+   >
+   > Repo : https://github.com/gaelbasta/prod-01 (privé) — copie de travail : `~/claude-projects/prod-01` sur dev-linux.
 
 ## En une phrase
 
