@@ -1,4 +1,4 @@
-# Phase 5 (partie 1) — HTTPS : cert-manager et certificat wildcard
+# Phase 5 — HTTPS : cert-manager, certificat wildcard, redirection
 
 **Quoi** : obtenir automatiquement un certificat Let's Encrypt `*.prod.gba-lab.win` et le faire servir par défaut par Traefik, pour que toutes les apps soient en HTTPS valide sans configuration de leur côté.
 **Réalisé le** : 2026-10-10 · **Durée** : ~35 min · **Depuis** : dev-linux (`~/claude-projects/prod-01`)
@@ -142,12 +142,41 @@ curl -sS https://test.prod.gba-lab.win | head -3        # Hostname: whoami-… (
 ```
 Résultat du 2026-10-10 : ✅ cadenas valide sur le PC Windows, sur le téléphone (Wi-Fi) et dans `curl`.
 
+## 8. Redirection HTTP → HTTPS (globale, Traefik)
+
+Fichier : [`platform/traefik/helmchartconfig.yaml`](../../platform/traefik/helmchartconfig.yaml) — surcharge K3s (`HelmChartConfig`) du Traefik fourni par K3s, conservée lors des mises à jour de K3s (ADR-023).
+Appliquer **d'abord sur k3d**, puis sur prod-01. K3s relance une installation de Traefik (tâche `helm-install-traefik`) → Traefik redémarre (quelques secondes de coupure pour toutes les apps).
+```bash
+kubectl --context prod-01 apply -f platform/traefik/helmchartconfig.yaml
+sleep 45
+kubectl --context prod-01 -n kube-system rollout status deploy/traefik --timeout=120s
+kubectl --context prod-01 -n kube-system get deploy traefik \
+  -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{@}{"\n"}{end}' | grep -i redirections
+curl -sI http://test.prod.gba-lab.win | head -3       # HTTP/1.1 308 Permanent Redirect + Location: https://…
+```
+Le `grep` **doit** afficher les 3 lignes `--entryPoints.web.http.redirections.entryPoint.{to,scheme,permanent}`.
+
+⚠️ **Piège rencontré le 2026-10-10** : avec le chart Traefik **40.x** (K3s v1.36), la clé est `ports.web.http.redirections` ; l'ancienne forme `ports.web.redirections` (charts 34 à 3x) est **acceptée sans erreur mais ignorée**. Symptôme : installation « réussie », `grep` vide, `404` au lieu de `308`. Diagnostic :
+```bash
+kubectl --context <ctx> -n kube-system get helmchart traefik -o jsonpath='{.spec.chart}{"\n"}'   # version du chart
+kubectl --context <ctx> -n kube-system get jobs,pods | grep helm-install-traefik
+kubectl --context <ctx> -n kube-system logs job/helm-install-traefik --tail=25
+```
+Après chaque mise à jour de K3s, refaire le `grep` : si le chart Traefik change de version majeure, la syntaxe peut changer encore.
+
+Retour arrière : `kubectl --context prod-01 -n kube-system delete helmchartconfig traefik` → Traefik d'origine en ~1 min.
+
+## Accès hors de la maison
+
+En 4G, `https://*.prod.gba-lab.win` **échoue** : le DNS répond `192.168.1.16`, IP privée injoignable hors du LAN. C'est voulu (ADR-009) et c'est la preuve que rien n'est exposé. Accès extérieur : Tailscale, phase 12 (ADR-010). Constaté le 2026-10-10.
+
 ---
 
 ## Revenir en arrière
 
 | Situation | Solution |
 |---|---|
+| Redirection HTTPS gênante | `kubectl --context prod-01 -n kube-system delete helmchartconfig traefik` |
 | Mauvais certificat servi / problème Traefik | `kubectl --context prod-01 delete -f platform/traefik/tlsstore-default.yaml` → retour au faux certificat Traefik, sans coupure |
 | Problème avec le certificat de production | remettre `letsencrypt-staging` dans `wildcard-prod.yaml` (`git revert`), réappliquer. **Ne pas relancer en boucle** en production (quotas) |
 | Supprimer le certificat | `kubectl --context prod-01 delete -f platform/cert-manager/wildcard-prod.yaml` puis `kubectl --context prod-01 -n kube-system delete secret wildcard-prod-tls` |
@@ -156,5 +185,5 @@ Résultat du 2026-10-10 : ✅ cadenas valide sur le PC Windows, sur le télépho
 
 ## Reconstruire de zéro (PROD-01 réinstallé, ou PPROD)
 
-1. Étape 2 (Helm) → 2. étape 3 (secret, token depuis le gestionnaire de mots de passe) → 3. `kubectl apply -f` de `cluster-issuers.yaml`, `wildcard-prod.yaml`, `tlsstore-default.yaml`.
+1. Étape 2 (Helm) → 2. étape 3 (secret, token depuis le gestionnaire de mots de passe) → 3. `kubectl apply -f` de `cluster-issuers.yaml`, `wildcard-prod.yaml`, `tlsstore-default.yaml`, `helmchartconfig.yaml` (vérifier le `grep` de l'étape 8).
 Pour la PPROD : adapter le nom (`*.pprod.gba-lab.win`, `wildcard-pprod`) et utiliser un token dédié.

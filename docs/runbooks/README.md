@@ -10,7 +10,7 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [installation-ubuntu.md](installation-ubuntu.md) | 2 | ✅ |
 | [socle-os.md](socle-os.md) (IP, SSH, mises à jour, swap, radios) | 3 | ✅ |
 | [installation-k3s.md](installation-k3s.md) (K3s, pare-feu, postes d'admin, test de fumée) | 4 | ✅ |
-| [https-certificats.md](https-certificats.md) (cert-manager, Let's Encrypt, wildcard, Traefik) | 5 | ✅ |
-| deployer-une-app.md (chart plateforme) | 5 | ⬜ |
+| [https-certificats.md](https-certificats.md) (cert-manager, Let's Encrypt, wildcard, redirection HTTPS) | 5 | ✅ |
+| [deployer-une-app.md](deployer-une-app.md) (chart plateforme : déployer, mettre à jour, revenir en arrière, publier le chart) | 5 | ✅ |
 | sauvegarde-et-restauration.md | 7 | ⬜ |
 | redemarrer-prod-01.md | — | ⬜ |

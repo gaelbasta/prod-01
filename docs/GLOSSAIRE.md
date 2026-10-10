@@ -16,6 +16,7 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **DNS rebinding (protection)** | Sécurité de certaines box qui refuse qu'un nom public pointe vers une IP de la maison. | Un standardiste méfiant. |
 | **GHCR** | GitHub Container Registry : l'entrepôt où sont rangées les images de mes apps. | Le congélateur où sont stockés les plats sous vide. |
 | **Helm** | L'outil qui installe, met à jour et revient en arrière sur des charts (`helm upgrade --install`, `helm rollback`). | Le livreur-installateur qui garde le bon de livraison de chaque version. |
+| **HelmChartConfig** | Fichier de surcharge K3s pour régler une appli que K3s installe lui-même (ici Traefik), sans toucher à son installation. | Un post-it collé sur la notice de montage. |
 | **Image** | Le modèle figé d'un conteneur, versionné (`prism:1.4.0`). | La recette + le plat congelé, avec une étiquette de version. |
 | **Ingress** | La règle qui dit à Traefik « tel nom → telle app ». | Un panneau indicateur. |
 | **K3s** | Une distribution légère de Kubernetes. | Kubernetes en format mini-PC. |
@@ -29,14 +30,19 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **Namespace** | Un compartiment du cluster ; un par projet. | Un tiroir par projet. |
 | **NUT** | Logiciel qui lit l'état de l'onduleur et éteint proprement les machines. | Le gardien qui ferme la boutique avant la coupure. |
 | **Pod** | La plus petite unité qui tourne dans Kubernetes (1 ou plusieurs conteneurs). | Une assiette servie. |
+| **Paquet OCI / registre** | Format « image de conteneur » utilisé aussi pour ranger des charts Helm dans GHCR (`oci://ghcr.io/…`). | Le même entrepôt pour les plats et les moules. |
 | **PPROD** | Préproduction : copie de la prod pour tester avant. | La répétition générale. |
+| **preStop (pause d'arrêt)** | Petite attente avant l'arrêt d'un pod, le temps que Traefik ne lui envoie plus de requêtes : mises à jour sans coupure. | Finir de servir la table avant de quitter son service. |
 | **PVC / volume** | L'espace disque réservé à une app pour ses données. | Le casier personnel d'une app. |
 | **PWA** | Un site web installable comme une app sur téléphone. Exige HTTPS. | Un raccourci qui se prend pour une vraie app. |
+| **Redirection 308** | Réponse « cette page est définitivement à cette autre adresse » : ici tout `http://` vers `https://`. | Un panneau « entrée par l'autre porte ». |
 | **restic** | Outil de sauvegarde chiffrée et dédupliquée. | Un coffre-fort qui ne stocke qu'une fois ce qui ne change pas. |
+| **Rollback** | Retour à une version précédente d'un déploiement Helm (`helm rollback`) ; ajoute une ligne à l'historique, n'efface rien. | La touche « annuler », avec trace. |
 | **Runbook** | Une procédure pas-à-pas pour une opération (dans `docs/runbooks/`). | Une fiche recette. |
 | **Sealed Secrets** | Secrets chiffrés qu'on peut ranger dans Git sans risque. | Une lettre sous enveloppe scellée que seul PROD-01 sait ouvrir. |
 | **Secret** | Objet Kubernetes qui contient une donnée sensible (token, mot de passe). Sa valeur n'est jamais dans Git, seul son emplacement est documenté. | Un coffre dont on note l'adresse, pas la combinaison. |
 | **SSH par clé** | Connexion à distance sans mot de passe, avec une paire de clés. | Une clé physique plutôt qu'un code à 4 chiffres. |
+| **Tag Git** | Marque-page posé sur un commit (ex. `plateforme-0.1.0`) pour retrouver exactement le code d'une version publiée. | Un signet dans un livre. |
 | **Tailscale** | Un réseau privé chiffré entre mes appareils, où qu'ils soient. | Un couloir secret entre ta poche et la maison. |
 | **TLSStore** | Objet Traefik qui définit le certificat présenté par défaut. Le nôtre (`kube-system/default`) pointe vers le wildcard. | Le badge que le portier montre à tous les visiteurs. |
 | **Traefik** | Le point d'entrée HTTP(S) du cluster. | Le portier qui oriente les visiteurs. |

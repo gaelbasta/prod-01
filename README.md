@@ -59,7 +59,9 @@ Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle
 | Applications | `https://<app>.prod.gba-lab.win` (Traefik, certificat wildcard Let's Encrypt par défaut — ADR-022) |
 | Certificats | cert-manager, guichets `letsencrypt-staging` / `letsencrypt-prod`, wildcard `kube-system/wildcard-prod-tls` renouvelé automatiquement |
 | Postes | PC Windows (contexte unique `prod-01`) · dev-linux (défaut `k3d-dev-local`, PROD-01 **toujours** en `--context prod-01`) |
-| Test de fumée | `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win (cadenas valide) |
+| Déployer une app | `helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait` ([runbook](docs/runbooks/deployer-une-app.md)) |
+| Accès | LAN uniquement (en 4G : injoignable, voulu) ; extérieur via Tailscale en phase 12 |
+| Tests de fumée | sans Helm : `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win · avec le chart : `tests/values-smoke-prod.yaml` → https://smoke.prod.gba-lab.win |
 
 ## Arborescence du repo
 
@@ -67,6 +69,7 @@ Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle
 |---|---|
 | `docs/` | architecture, glossaire, standard d'hébergement, runbooks |
 | `k3s/` | configuration K3s versionnée |
+| `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
 | `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
 | `scripts/` | reconstruction : `socle-os.sh`, `install-k3s.sh` |
-| `tests/` | tests de fumée |
+| `tests/` | tests de fumée (manifeste brut, valeurs du chart pour k3d et prod) |

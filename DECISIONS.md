@@ -150,7 +150,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Le token Cloudflare est conservé dans le gestionnaire de mots de passe ; dans le cluster : secret `cert-manager/cloudflare-api-token`, clé `api-token` (ADR-008). Perte du cluster = recréer ce secret puis réappliquer `platform/` ; tout le reste (clés de compte, certificat) se régénère seul.
   - Renouvellement automatique ~30 jours avant échéance (certificats de 90 jours). La surveillance de l'échéance revient à Home Assistant (phase 11).
   - La PPROD aura son propre wildcard `*.pprod.gba-lab.win` (même méthode, son propre token).
-  - Redirection automatique HTTP → HTTPS : pas encore en place (à traiter avec le chart plateforme).
+  - Redirection automatique HTTP → HTTPS : en place (ADR-023).
+  - Hors du LAN (4G), les noms `*.prod` répondent `192.168.1.16` mais sont injoignables : comportement voulu, constaté le 2026-10-10 ; accès extérieur par Tailscale (ADR-010).
 
 ## ADR-023 — Chart plateforme : publié sur GHCR, redirection HTTPS globale, static = image nginx
 - **Date** : 2026-10-10 · **Statut** : Acceptée (mise en œuvre en phase 5) · **Précise** : ADR-005, ADR-021
@@ -166,6 +167,10 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Conséquences** :
   - Les postes d'administration se connectent une fois à GHCR (`helm registry login ghcr.io`, token GitHub `read:packages`, et `write:packages` sur dev-linux pour publier). Le cluster, lui, ne télécharge jamais le chart (seulement les images).
   - Le chart est d'abord testé sur `k3d-dev-local` (`helm lint` puis déploiement) avant toute publication.
+- **Mise en œuvre (2026-10-10)** :
+  - Chart **0.1.0** publié (`sha256:8dfa83fc…f6f4078`), tag Git `plateforme-0.1.0`, paquet GHCR **privé**. Test `smoke` déployé sur PROD-01 depuis GHCR : HTTPS valide, redirection 308, mise à jour sans coupure (300/300).
+  - Ajout de `shutdownDelaySeconds` (pause `preStop` de 5 s) après avoir **mesuré** 1 erreur 502/504 sur 300 requêtes pendant chaque mise à jour sans elle.
+  - Redirection : `platform/traefik/helmchartconfig.yaml`. Syntaxe du chart Traefik 40 : `ports.web.http.redirections` (l'ancienne clé est ignorée sans erreur → toujours vérifier les arguments de Traefik).
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

@@ -44,19 +44,22 @@ et proposer un nouvel ADR.
   un chart plateforme commun (profils app/static) + values-<env>.yaml par projet.
 
 ## Où on en est
-- Phases 0 à 4 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s +
-  pare-feu + postes d'admin + test de fumée whoami).
-- PHASE 5 — HTTPS + chart plateforme : 🟨
-  ✅ 1-3 et 5 (2026-10-10, ADR-022, runbook https-certificats.md) :
-     token Cloudflare (Zone.DNS:Edit + Zone.Zone:Read), cert-manager v1.21.2
-     (Helm OCI), ClusterIssuers letsencrypt-staging / letsencrypt-prod,
-     wildcard *.prod.gba-lab.win (kube-system/wildcard-prod-tls) servi par
-     défaut par Traefik 3.7 (TLSStore default) ; https://test.prod.gba-lab.win
-     avec cadenas valide (PC, téléphone, curl).
-     Fichiers : platform/cert-manager/, platform/traefik/.
-  ⬜ 4. chart Helm plateforme (profils app / static) : Ingress avec bloc tls:
-     sans secretName ; testé d'abord sur k3d-dev-local puis déployé sur prod-01 ;
-     runbook deployer-une-app.md. À trancher : redirection HTTP → HTTPS.
-- Ensuite : phase 6 wiki (MkDocs, agrège les docs/ des projets),
-  phase 7 sauvegardes (restic → disque 3,5" sur le N100), phase 8 PRISM.
+- Phases 0 à 5 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
+  + postes d'admin, HTTPS + chart plateforme).
+- Phase 5 en bref (2026-10-10, ADR-022 et ADR-023, runbooks https-certificats.md
+  et deployer-une-app.md) :
+  - cert-manager v1.21.2 ; wildcard *.prod.gba-lab.win (Let's Encrypt, DNS-01
+    Cloudflare) servi par défaut par Traefik ; redirection HTTP → HTTPS globale
+    (platform/traefik/helmchartconfig.yaml, syntaxe chart Traefik 40 :
+    ports.web.http.redirections — l'ancienne est ignorée en silence).
+  - Chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé,
+    tag Git plateforme-0.1.0) : profils app/static, sondes, volume conservé,
+    pause d'arrêt 5 s (mises à jour sans coupure, mesuré 300/300).
+  - helm registry login ghcr.io fait sur dev-linux (token write:packages) ;
+    PAS ENCORE sur le PC Windows (token read:packages à créer).
+  - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
+- Prochaine : PHASE 6 — wiki MkDocs (profil static : image nginx + site,
+  agrège les docs/ des projets dont ce repo), premier vrai projet déployé
+  avec le chart.
+- Ensuite : phase 7 sauvegardes (restic → disque 3,5" sur le N100), phase 8 PRISM.
 ```
