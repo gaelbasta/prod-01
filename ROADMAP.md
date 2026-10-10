@@ -8,8 +8,8 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 
 | # | Phase | Contenu | Statut |
 |---|---|---|---|
-| 0 | Préparation | Repo `prod-01`, clé USB Ubuntu Server 26.04.1 LTS, achat du nom de domaine, mise à jour du BIOS (sous Windows) | 🟨 |
-| 1 | Audit matériel | ✅ BIOS réglé (2026-10-09). Reste, sous Linux : santé du NVMe (SMART), températures sous charge, stabilité réseau I226-V | 🟨 |
+| 0 | Préparation | ✅ Repo `prod-01` sur GitHub, ✅ clé USB, ✅ BIOS à jour (1.02, pas de flash nécessaire). Reste : **achat du nom de domaine** (requis en phase 5) | 🟨 |
+| 1 | Audit matériel | BIOS réglé, SSD sain (SMART + auto-test), 30 min de charge à 82 °C sans bridage, réseau I226-V sans erreur | ✅ 2026-10-10 |
 | 2 | Installation Ubuntu | Partitionnement LVM (ADR-003), hostname `prod-01`, utilisateur, OpenSSH | ✅ 2026-10-09 |
 | 3 | Socle OS | IP réservée sur la Livebox, clés SSH (PC Windows + dev-linux), SSH par clé uniquement, mises à jour de sécurité auto, fuseau horaire, swap supprimé, Wi-Fi/BT coupés | ✅ 2026-10-10 |
 | 4 | K3s | Installation mono-nœud, kubectl + k9s sur PROD-01, PC Windows et dev-linux | ⬜ |

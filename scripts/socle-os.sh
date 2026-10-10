@@ -30,7 +30,7 @@ timedatectl set-timezone Europe/Paris
 echo "==> Mises à jour"
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y
-DEBIAN_FRONTEND=noninteractive apt-get install -y rfkill
+DEBIAN_FRONTEND=noninteractive apt-get install -y rfkill smartmontools nvme-cli lm-sensors
 
 echo "==> SSH : clés uniquement (ADR-017)"
 cat > /etc/ssh/sshd_config.d/10-prod01.conf <<'EOF'

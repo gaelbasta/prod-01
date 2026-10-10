@@ -6,6 +6,7 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | Fiche | Phase | Statut |
 |---|---|---|
 | [phase-0-1-preparation-bios.md](phase-0-1-preparation-bios.md) | 0–1 | 🟨 en cours |
+| [audit-materiel.md](audit-materiel.md) (SSD, températures, charge, réseau) | 1 | ✅ |
 | [installation-ubuntu.md](installation-ubuntu.md) | 2 | ✅ |
 | [socle-os.md](socle-os.md) (IP, SSH, mises à jour, swap, radios) | 3 | ✅ |
 | installation-k3s.md | 4 | ⬜ |
