@@ -59,19 +59,22 @@ Sans le `sleep 2`, le `curl` part avant que nginx écoute et ne répond rien.
 
 **Publier puis déployer** (règle : fichier commité **avant** de déployer — ADR-021) :
 ```bash
-docker push ghcr.io/gaelbasta/wiki:<tag>                                   # … digest: sha256:…
-sed -i 's/tag: "[^"]*"/tag: "<tag>"/' deploy/values-prod.yaml
+TAG=$(docker images ghcr.io/gaelbasta/wiki --format '{{.Tag}}' | sort | tail -1) && echo "Tag : $TAG"   # image la plus récente
+docker push ghcr.io/gaelbasta/wiki:$TAG                                    # … digest: sha256:… (seules 1-2 couches envoyées)
+sed -i "s/tag: \"[^\"]*\"/tag: \"$TAG\"/" deploy/values-prod.yaml
 git diff                                                                   # une seule ligne : le tag
-git commit -am "Wiki : déploiement prod de l'image <tag>" && git push
+git commit -am "Wiki : déploiement prod de l'image $TAG" && git push
 git status --short                                                         # vide
 helm upgrade --install wiki oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
   -n wiki --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait --timeout 3m
 ```
-Attendu : `STATUS: deployed`, révision +1.
+Attendu : `STATUS: deployed`, révision +1. Retour arrière : section D.
 
 ## C. Vérifier — ✅ 2026-10-10
 
 ```bash
+sleep 10                                                                         # l'ancien pod finit sa pause d'arrêt
+curl -sS https://wiki.prod.gba-lab.win | grep -o 'wiki:2026[^<`]*'                 # le tag qui vient d'être déployé
 curl -sS https://wiki.prod.gba-lab.win | grep -o '<title>.*</title>'             # <title>Wiki PROD-01</title>
 curl -sIL http://wiki.prod.gba-lab.win | grep -E '^(HTTP|Location)'              # 308 → https://… → 200
 curl -sI https://wiki.prod.gba-lab.win/prod-01 | grep -iE '^(HTTP|Location)'     # 301, location: /prod-01/ (relative, sans :8080)
@@ -115,6 +118,8 @@ Puis navigateur du PC et du téléphone **en Wi-Fi** : cadenas valide, menu, rec
 | Menu des runbooks en désordre | MkDocs trie par nom de fichier | plugin awesome-nav + fichiers `.nav.yml` dans prod-01 |
 | `WARNING awesome-nav: The nav item '*' doesn't match…` | le joker final ne trouve rien quand toutes les pages sont listées | `glob: "*"` + `ignore_no_matches: true` |
 | Premier `curl` local muet | lancé avant le démarrage de nginx | `sleep 2` avant le test |
+| Juste après `helm upgrade`, la page affiche encore l'ancien tag | l'ancien pod sert ses dernières requêtes pendant la pause d'arrêt de 5 s (voulu : zéro coupure) | `sleep 10` avant de contrôler |
+| Le ZIP de livraison du repo wiki a ramené un ancien tag dans `deploy/values-prod.yaml` | copie de référence non à jour | `git checkout -- deploy/values-prod.yaml` avant le commit ; **toujours lire `git status` / `git diff` après un dézippage** |
 | `Readiness probe failed … connection refused` au démarrage du pod | sonde passée une fraction de seconde avant que nginx écoute | aucune (le test suivant passe, pod `1/1`, 0 redémarrage) ; délai initial possible dans une future version du chart |
 | Thème Material d'abord choisi | Gael préfère le rendu Read the Docs | thème `readthedocs` intégré à MkDocs (ADR-024), révision 2 |
 | En ligne : blocs de commandes dans les listes numérotées aplatis, sous-listes à 2 espaces aplaties (alors que VS Code les affiche bien) | MkDocs lit le Markdown avec Python-Markdown, plus strict que VS Code/GitHub — pas un problème de thème | extensions `pymdownx.superfences` + `mdx_truly_sane_lists` ; retour au thème Material (bouton « copier », mode sombre) — ADR-025 ; rendu vérifié sur toute la doc avant déploiement |

@@ -54,7 +54,7 @@ et proposer un nouvel ADR.
   - https://wiki.prod.gba-lab.win : MkDocs 1.6.1 figé, thème Material 9.7.7
     (ADR-025, après un essai readthedocs), plugin awesome-nav 3.3.0 (ordre du menu
     par fichiers .nav.yml dans les repos), extensions superfences + truly_sane_lists
-    pour un rendu identique à VS Code.
+    pour un rendu identique à VS Code. En prod : image 2026.10.10-1715, révision 3.
   - Repo gaelbasta/wiki (privé, ~/claude-projects/wiki) : projets.txt liste les
     repos publiés ; scripts/construire.sh les clone depuis GitHub et construit
     l'image ghcr.io/gaelbasta/wiki:<AAAA.MM.JJ-HHMM> (privée) ; déployé avec le

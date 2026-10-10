@@ -208,6 +208,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Le reste de l'ADR-024 est inchangé (MkDocs 1.6.1 figé, repo `wiki`, périmètres, `.nav.yml`, image privée).
   - Les limites « readthedocs » de l'ADR-024 disparaissent. Le passage futur à Zensical (successeur de Material) se fera sans changement d'apparence.
   - Material affiche à chaque construction un avertissement sur MkDocs 2.0 : informatif, sans effet tant que MkDocs reste figé en 1.6.1.
+- **Mise en œuvre (2026-10-10)** : image `2026.10.10-1715`, révision Helm 3 (révision 2 = essai readthedocs `2026.10.10-1700`). Vérifié en local puis en production, PC et téléphone.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
