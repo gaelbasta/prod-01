@@ -136,6 +136,22 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Pourquoi** : une seule méthode pour tout (ADR-005), un geste simple, un historique et un retour arrière intégrés (`helm history`, `helm rollback`).
 - **Conséquences** : Argo CD (phase 9) devient **optionnel**, à reconsidérer plus tard (il sait lui aussi déployer des charts Helm, rien ne serait perdu). Helm est installé sur le PC Windows et dev-linux en phase 4.
 
+## ADR-022 — HTTPS : cert-manager, DNS-01 Cloudflare, un wildcard servi par défaut
+- **Date** : 2026-10-10 · **Statut** : Acceptée (appliquée) · **Précise** : ADR-009, ADR-021
+- **Contexte** : les apps de PROD-01 doivent être en HTTPS valide (PWA, ADR-009) alors que PROD-01 n'est **pas joignable depuis Internet** : Let's Encrypt ne peut donc pas venir vérifier par HTTP.
+- **Décision** :
+  1. **cert-manager v1.21.2**, installé par son chart Helm officiel (`oci://quay.io/jetstack/charts/cert-manager`), valeurs dans `platform/cert-manager/values-prod.yaml`.
+  2. **Validation DNS-01 via Cloudflare** : cert-manager écrit un TXT temporaire `_acme-challenge.prod.gba-lab.win`. Token API dédié `cert-manager-prod-01`, droits **Zone.DNS:Edit + Zone.Zone:Read** limités à la zone `gba-lab.win` (le droit de lecture est nécessaire pour que cert-manager trouve la zone), sans filtre d'IP (IP publique non fixe) ni date d'expiration (une expiration bloquerait les renouvellements en silence). Vérification de propagation sur `1.1.1.1` / `1.0.0.1`, jamais la Livebox.
+  3. **Deux guichets** (`ClusterIssuer`) : `letsencrypt-staging` (bac à sable, pour tester toute nouvelle config) et `letsencrypt-prod`. **Pas d'e-mail** de compte : facultatif, Let's Encrypt n'envoie plus d'alertes d'expiration depuis 2025.
+  4. **Un seul certificat wildcard** `*.prod.gba-lab.win` (`kube-system/wildcard-prod-tls`), déclaré **certificat par défaut de Traefik** via le `TLSStore` nommé `default`. Les apps ne gèrent **aucun certificat** : leur Ingress contient seulement un bloc `tls:` sans `secretName` (le chart plateforme l'ajoutera).
+  5. Les objets de configuration qui ne sont pas des charts (`ClusterIssuer`, `Certificate`, `TLSStore`) sont des manifestes versionnés dans `platform/<outil>/` et appliqués par `kubectl --context prod-01 apply -f`. Comme pour Helm : **commit avant application**.
+- **Pourquoi** : DNS-01 est la seule validation possible sans exposer PROD-01. Un wildcard unique = une seule demande à Let's Encrypt (pas de quota consommé à chaque nouvelle app), zéro configuration TLS par app, et le nom des apps n'apparaît pas dans les journaux publics de certificats (Certificate Transparency).
+- **Conséquences** :
+  - Le token Cloudflare est conservé dans le gestionnaire de mots de passe ; dans le cluster : secret `cert-manager/cloudflare-api-token`, clé `api-token` (ADR-008). Perte du cluster = recréer ce secret puis réappliquer `platform/` ; tout le reste (clés de compte, certificat) se régénère seul.
+  - Renouvellement automatique ~30 jours avant échéance (certificats de 90 jours). La surveillance de l'échéance revient à Home Assistant (phase 11).
+  - La PPROD aura son propre wildcard `*.pprod.gba-lab.win` (même méthode, son propre token).
+  - Redirection automatique HTTP → HTTPS : pas encore en place (à traiter avec le chart plateforme).
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.

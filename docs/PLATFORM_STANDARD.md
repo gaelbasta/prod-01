@@ -26,6 +26,7 @@
 | Version | jamais `latest` en prod | `1.0.0` |
 | Données | toujours dans un volume, jamais dans l'image | — |
 | Accès | LAN par défaut ; accès Tailscale ou public = ADR | — |
+| HTTPS | automatique : certificat wildcard servi par défaut (ADR-022), **aucun certificat à gérer par projet** | — |
 
 ## Ce que chaque projet doit fournir
 

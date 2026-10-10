@@ -30,7 +30,10 @@ et proposer un nouvel ADR.
   avec une explication courte (ELI5) de ce que fait chaque commande.
 - Je colle les sorties des commandes ; attends-les avant l'étape suivante.
 - Pour toute modif risquée (SSH, pare-feu…) : prévoir le retour arrière et
-  garder une session ouverte.
+  garder une session ouverte. Présenter le retour arrière dans un encadré
+  « ⛔ NE PAS EXÉCUTER — seulement en cas de problème », jamais comme un
+  bloc de commandes à la suite des vérifications.
+- Règle Git : écrire le fichier → git diff → commit + push → PUIS appliquer.
 - Rappelle-moi de vérifier le nom de machine dans l'invite (gael@prod-01 vs
   gael@dev-linux) : je me suis déjà trompé.
 - Documentation : chaque décision → ADR dans DECISIONS.md ; chaque opération
@@ -43,14 +46,17 @@ et proposer un nouvel ADR.
 ## Où on en est
 - Phases 0 à 4 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s +
   pare-feu + postes d'admin + test de fumée whoami).
-- Prochaine : PHASE 5 — HTTPS + chart plateforme :
-  1. token API Cloudflare (droits minimaux : Zone.DNS:Edit sur gba-lab.win)
-  2. cert-manager (Helm) + ClusterIssuer Let's Encrypt (DNS-01 Cloudflare),
-     d'abord en staging puis en production
-  3. certificat wildcard *.prod.gba-lab.win, servi par Traefik par défaut
-  4. chart Helm plateforme (profils app / static), testé d'abord sur
-     k3d-dev-local puis déployé sur prod-01
-  5. test : https://test.prod.gba-lab.win avec cadenas valide
+- PHASE 5 — HTTPS + chart plateforme : 🟨
+  ✅ 1-3 et 5 (2026-10-10, ADR-022, runbook https-certificats.md) :
+     token Cloudflare (Zone.DNS:Edit + Zone.Zone:Read), cert-manager v1.21.2
+     (Helm OCI), ClusterIssuers letsencrypt-staging / letsencrypt-prod,
+     wildcard *.prod.gba-lab.win (kube-system/wildcard-prod-tls) servi par
+     défaut par Traefik 3.7 (TLSStore default) ; https://test.prod.gba-lab.win
+     avec cadenas valide (PC, téléphone, curl).
+     Fichiers : platform/cert-manager/, platform/traefik/.
+  ⬜ 4. chart Helm plateforme (profils app / static) : Ingress avec bloc tls:
+     sans secretName ; testé d'abord sur k3d-dev-local puis déployé sur prod-01 ;
+     runbook deployer-une-app.md. À trancher : redirection HTTP → HTTPS.
 - Ensuite : phase 6 wiki (MkDocs, agrège les docs/ des projets),
   phase 7 sauvegardes (restic → disque 3,5" sur le N100), phase 8 PRISM.
 ```

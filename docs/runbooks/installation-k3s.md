@@ -100,6 +100,8 @@ Nettoyer : `kubectl --context prod-01 delete namespace test`.
 
 Résultat du 2026-10-10 : ✅ page affichée depuis Firefox sous Windows (chaîne DNS Cloudflare → pare-feu → Traefik → pod validée).
 
+> Depuis la phase 5, le test de fumée est en **HTTPS** : voir [https-certificats.md](https-certificats.md).
+
 ## Revenir en arrière
 
 | Situation | Solution |

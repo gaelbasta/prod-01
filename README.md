@@ -32,7 +32,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 
 | Nom | Matériel | Rôle | État |
 |---|---|---|---|
-| PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | Socle OS prêt |
+| PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | K3s + HTTPS en service |
 | N100 (`gbaubu02p`) | Mini-PC Intel N100 | PPROD + cible de sauvegarde transitoire | À réinstaller après PROD-01 |
 | dev-linux | Workstation Ubuntu | Développement et build | En service |
 | Home Assistant | — | Surveillance et alertes | En service |
@@ -56,9 +56,10 @@ Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle
 |---|---|
 | Cluster | K3s v1.36.5, mono-nœud, contexte **`prod-01`** |
 | API | `https://k3s.prod.gba-lab.win:6443` (LAN uniquement) |
-| Applications | `http(s)://<app>.prod.gba-lab.win` (Traefik) |
+| Applications | `https://<app>.prod.gba-lab.win` (Traefik, certificat wildcard Let's Encrypt par défaut — ADR-022) |
+| Certificats | cert-manager, guichets `letsencrypt-staging` / `letsencrypt-prod`, wildcard `kube-system/wildcard-prod-tls` renouvelé automatiquement |
 | Postes | PC Windows (contexte unique `prod-01`) · dev-linux (défaut `k3d-dev-local`, PROD-01 **toujours** en `--context prod-01`) |
-| Test de fumée | `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → http://test.prod.gba-lab.win |
+| Test de fumée | `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win (cadenas valide) |
 
 ## Arborescence du repo
 
@@ -66,5 +67,6 @@ Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle
 |---|---|
 | `docs/` | architecture, glossaire, standard d'hébergement, runbooks |
 | `k3s/` | configuration K3s versionnée |
+| `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
 | `scripts/` | reconstruction : `socle-os.sh`, `install-k3s.sh` |
 | `tests/` | tests de fumée |

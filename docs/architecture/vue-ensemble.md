@@ -5,7 +5,7 @@
 Quand tu ouvres `https://prism.prod.<domaine>` sur ton téléphone :
 
 1. **Le DNS** traduit le nom en adresse : « prism.prod… = 192.168.1.x (PROD-01) ».
-2. **Le navigateur** se connecte à PROD-01 en HTTPS. Le cadenas est valide grâce au certificat Let's Encrypt.
+2. **Le navigateur** se connecte à PROD-01 en HTTPS. Le cadenas est valide grâce au certificat wildcard Let's Encrypt `*.prod.gba-lab.win`, que cert-manager obtient et renouvelle tout seul (ADR-022).
 3. **Traefik**, le portier de K3s, regarde le nom demandé (`prism`) et transmet à la bonne application.
 4. **L'application PRISM** tourne dans un conteneur et lit ses données sur le disque de PROD-01.
 
@@ -30,8 +30,8 @@ Hors de la maison, c'est la même chose, sauf que **Tailscale** crée un tunnel 
 
 1. Je code sur **dev-linux**.
 2. Je construis l'image de l'app et je l'envoie sur **GHCR** (GitHub).
-3. Je mets à jour la version de l'image dans ce repo.
-4. Niveau 1 : je lance `kubectl apply -k`. Niveau 2 : Argo CD le fait tout seul.
+3. Je mets à jour la version de l'image dans le fichier `values-prod.yaml` du projet, et je le commite.
+4. Je lance une seule commande : `helm upgrade --install … --kube-context prod-01` (ADR-021). Retour arrière : `helm rollback`.
 
 ## Ce qui n'existe PAS (volontairement)
 
