@@ -229,6 +229,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - La phase 14 se réduit à : K3s, wildcard `*.pprod.gba-lab.win`, déploiements PPROD.
   - Nouvelle clé d'hôte SSH : effacer l'ancienne empreinte de `192.168.1.51` sur les postes (`ssh-keygen -R`). Les anciens contextes kubectl vers le K3s du N100 deviennent obsolètes.
   - Mode opératoire : [runbook installation-pprod-01.md](docs/runbooks/installation-pprod-01.md).
+- **Mise en œuvre (2026-10-10)** : Beelink Mini S (BIOS ADLNV105, non flashé ; seul réglage modifié : *State After G3* → S0, redémarrage après coupure testé). Ubuntu Server 26.04.1 installé, partitionnement conforme, `socle-os.sh` appliqué sans modification. Accès par clé depuis dev-linux et le PC Windows, mots de passe refusés.
 
 ## ADR-027 — Sauvegardes : restic sur PROD-01 → rest-server « append-only » sur `pprod-01`
 - **Date** : 2026-10-10 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-012

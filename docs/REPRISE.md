@@ -72,6 +72,10 @@ et proposer un nouvel ADR.
     /srv/sauvegardes (UUID, nofail), ufw limité à 192.168.1.16 ; forget/prune/check
     sur pprod-01 ; mot de passe restic aussi dans le gestionnaire de mots de passe.
   - Validation : 3 tests de restauration (/etc, base K3s, volume de test).
-  - Où j'en suis : ⚠️ METTRE À JOUR (réinstallation faite ? disque branché ?).
+  - ✅ 2026-10-10 : pprod-01 réinstallé (Beelink Mini S, BIOS State After G3 → S0,
+    coupure testée), socle appliqué, `ssh pprod-01` par clé depuis les 2 postes.
+    Reste : nettoyage postes (bloc numobserver-prod sur Windows, vieux contextes kubectl).
+  - Prochaine étape : disque 3,5" (13–14 oct.) → montage /srv/sauvegardes, rest-server,
+    restic sur PROD-01, puis les 3 tests de restauration.
 - Ensuite : phase 8 PRISM (profil app, données SQLite, secrets à la main).
 ```

@@ -34,7 +34,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | Nom | Matériel | Rôle | État |
 |---|---|---|---|
 | PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | K3s + HTTPS en service |
-| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Réinstallation en cours (phase 7, ADR-026) |
+| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Ubuntu Server 26.04.1 + socle (2026-10-10) ; disque de sauvegarde attendu |
 | dev-linux | Workstation Ubuntu | Développement et build | En service |
 | Home Assistant | — | Surveillance et alertes | En service |
 | PC Windows (`DESKTOP-8IUGODI`) | MSI MS-7B17 | Poste d'administration (SSH, kubectl, k9s) | En service |
@@ -47,9 +47,9 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | dev-linux | 192.168.1.19 | 38:7C:76:4F:B0:DA | |
 | Home Assistant | 192.168.1.26 | 20:F8:3B:03:E0:97 | |
 | PC Windows | 192.168.1.31 | 00:D8:61:17:BC:FB | |
-| `pprod-01` (N100) | 192.168.1.51 | E8:FF:1E:D4:F6:07 | ex-`gbaubu02p` ; réinstallé en phase 7 (ADR-026) |
+| `pprod-01` (N100) | 192.168.1.51 | E8:FF:1E:D4:F6:07 | `enp1s0` ; ex-`gbaubu02p` ; réinstallé en phase 7 (ADR-026) |
 
-Connexion : `ssh prod-01` depuis le PC Windows ou dev-linux (voir [runbook socle OS](docs/runbooks/socle-os.md)).
+Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (voir [runbook socle OS](docs/runbooks/socle-os.md)).
 
 ## Kubernetes
 
