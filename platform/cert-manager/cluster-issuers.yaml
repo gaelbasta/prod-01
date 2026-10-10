@@ -1,0 +1,21 @@
+# Guichets Let's Encrypt pour PROD-01 (ADR-022)
+# Appliquer : kubectl --context prod-01 apply -f platform/cert-manager/cluster-issuers.yaml
+# Secret requis (créé à la main, ADR-008) : cert-manager/cloudflare-api-token, clé api-token
+#   = token Cloudflare « cert-manager-prod-01 » (Zone.DNS:Edit + Zone.Zone:Read sur gba-lab.win)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key   # clé du compte Let's Encrypt (créée automatiquement)
+    solvers:
+      - selector:
+          dnsZones: ["gba-lab.win"]
+        dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token
