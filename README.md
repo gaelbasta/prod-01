@@ -19,6 +19,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | Comprendre un mot technique | [docs/GLOSSAIRE.md](docs/GLOSSAIRE.md) |
 | Héberger un nouveau projet | [docs/PLATFORM_STANDARD.md](docs/PLATFORM_STANDARD.md) |
 | Faire une opération (se connecter, redémarrer, restaurer…) | [docs/runbooks/](docs/runbooks/) |
+| Reprendre le chantier avec Claude dans une nouvelle conversation | [docs/REPRISE.md](docs/REPRISE.md) |
 
 ## Règles du repo
 
