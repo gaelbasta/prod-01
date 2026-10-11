@@ -74,3 +74,12 @@ helm lint charts/plateforme -f <valeurs>                 # contrôle
 helm template test charts/plateforme -f <valeurs>        # affiche le YAML produit, sans rien déployer
 ```
 Publication sur GHCR : voir `docs/runbooks/deployer-une-app.md`. **Toute modification = nouvelle `version` dans `Chart.yaml`.**
+
+## Améliorations prévues (prochaine version, 0.2.0)
+
+Relevées au premier vrai déploiement (PRISM, 2026-10-11). Chacune fera l'objet d'un ADR à la publication.
+
+| Constat | Correction envisagée |
+|---|---|
+| Kubernetes injecte des variables `<SERVICE>_PORT=tcp://…` pour chaque service du namespace ; une app nommée `prism` qui lit `PRISM_PORT` plante (`ERR_SOCKET_BAD_PORT`). PRISM contourne en fixant `PRISM_PORT` dans `env`. | `enableServiceLinks: false` dans le pod |
+| Les NOTES affichées après `helm install` donnent `kubectl -n <ns> …` sans contexte : sur dev-linux, ces commandes viseraient `k3d-dev-local`. | Ajouter `--context` / `--kube-context` dans les NOTES (valeur `kubeContext` ou texte générique) |

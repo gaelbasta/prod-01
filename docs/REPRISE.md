@@ -77,5 +77,13 @@ et proposer un nouvel ADR.
     Reste : nettoyage postes (bloc numobserver-prod sur Windows, vieux contextes kubectl).
   - Prochaine étape : disque 3,5" (13–14 oct.) → montage /srv/sauvegardes, rest-server,
     restic sur PROD-01, puis les 3 tests de restauration.
-- Ensuite : phase 8 PRISM (profil app, données SQLite, secrets à la main).
+- PHASE 8 COMMENCÉE (2026-10-11) : PRISM déployé sur https://prism.prod.gba-lab.win
+  (image 0.9.0, chart 0.1.0, révision 1, volume prism-data 1 Gi, secrets ghcr-pull +
+  prism-secrets) avec des DONNÉES D'ESSAI. Vraies données après validation phase 7.
+  Contrat sauvegarde : le script restic de PROD-01 appelle d'abord
+  `k3s kubectl -n prism exec deploy/prism -- node src/serveur/sauvegarder.ts`
+  (code 0 = copie cohérente dans /data/sauvegardes) ; seuls les fichiers de
+  /data/sauvegardes sont fiables, jamais prism.sqlite/-wal/-shm.
+- Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES
+  (voir charts/plateforme/README.md).
 ```

@@ -4,7 +4,9 @@
 **Mis au point le** : 2026-10-10 (phase 5) · **Décisions** : [ADR-005](../../DECISIONS.md), [ADR-021](../../DECISIONS.md), [ADR-022](../../DECISIONS.md), [ADR-023](../../DECISIONS.md)
 **Chart** : `oci://ghcr.io/gaelbasta/charts/plateforme` — source [`charts/plateforme/`](../../charts/plateforme/) (valeurs détaillées dans son [README](../../charts/plateforme/README.md))
 
-> Légende : ✅ = fait réellement le 2026-10-10 · 🔜 = pas encore fait en vrai, à valider au premier usage (phase 6 ou 8) puis corriger ici.
+> Légende : ✅ = fait réellement · 🔜 = pas encore fait en vrai, à valider au premier usage puis corriger ici.
+>
+> **Premier vrai projet avec données et secrets : PRISM, le 2026-10-11** (image `0.9.0`, chart `0.1.0`, révision 1) — namespace + `ghcr-pull` + `prism-secrets` créés à la main, `helm upgrade --install … --wait --timeout 3m`, volume `prism-data` 1 Gi *Bound*, `/healthz` → 200, `/` → 401 (mot de passe), mises à jour en mode `Recreate` (volume local). Procédure propre au projet : `docs/` du repo PRISM.
 
 ## Ce que le chart fait pour toi
 
@@ -73,7 +75,7 @@ Profil `static` : `profile: static`, image nginx + fichiers (base `nginxinc/ngin
 
 **Commit + push du fichier AVANT de déployer** (ADR-021). Contrôle : `git status --short` vide.
 
-### 2. Les secrets (si besoin) — ✅ accès image privée (`ghcr-pull`, wiki, 2026-10-10) · 🔜 variables secrètes (phase 8)
+### 2. Les secrets (si besoin) — ✅ accès image privée (`ghcr-pull`, wiki, 2026-10-10) · ✅ variables secrètes (`prism-secrets`, PRISM, 2026-10-11)
 
 Créés à la main, jamais dans Git (ADR-008) ; documenter leur **emplacement** dans le `docs/` du projet.
 ```bash

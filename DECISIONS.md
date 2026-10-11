@@ -247,6 +247,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - **Append-only** : si PROD-01 est piraté ou si une commande erronée y est tapée, il peut **déposer** mais **jamais effacer** les sauvegardes existantes.
   - *Alternative écartée* : SFTP par SSH vers le N100 — plus simple, mais PROD-01 pourrait tout effacer.
   - restic chiffre **avant** l'envoi : le trafic HTTP sur le LAN ne transporte que des données chiffrées. Seul l'identifiant rest-server circule en clair sur le LAN, et il ne permet que d'ajouter. Limite connue et acceptée (TLS possible plus tard).
+- **Contrat avec les apps** (précisé le 2026-10-11, PRISM) : avant l'instantané, le script appelle la commande de copie cohérente de chaque app qui en a une — PRISM : `k3s kubectl -n prism exec deploy/prism -- node src/serveur/sauvegarder.ts` (code 0 = copie écrite et relue dans `/data/sauvegardes`). Code ≠ 0 = sauvegarde notée en échec. Seules les copies de `/data/sauvegardes` sont restaurables, jamais la base vivante (`prism.sqlite`, `-wal`, `-shm`).
 - **Validation de la phase 7** : 3 tests de restauration réussis — (1) un fichier de `/etc` restauré et comparé à l'original ; (2) la base K3s restaurée et vérifiée (`PRAGMA integrity_check`) ; (3) un volume de test (chart plateforme) écrit, sauvegardé, supprimé, puis restauré.
 - **Conséquences** :
   - Un seul disque = pas de redondance (transitoire, ADR-012) ; migration vers le NAS en phase 16.
