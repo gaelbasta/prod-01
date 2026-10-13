@@ -82,7 +82,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Pourquoi** : une sauvegarde sur une autre machine survit à la perte de PROD-01.
 - **Conséquences** : un seul disque = pas de redondance (transitoire). Une sauvegarde n'est validée qu'après un **test de restauration**. Le mot de passe restic est conservé hors de PROD-01.
 
-> Mise en œuvre précisée par **ADR-027** (2026-10-10) : rest-server en append-only, mot de passe aussi dans le gestionnaire de mots de passe.
+> Mise en œuvre précisée par **ADR-027** (2026-10-10) : rest-server en append-only, mot de passe aussi dans le gestionnaire de mots de passe ; puis par **ADR-028** (2026-10-13) : paquets Ubuntu, garde-fou disque, un sous-dossier par déposant.
 
 ## ADR-013 — Surveillance par Home Assistant
 - **Date** : 2026-10-09 · **Statut** : Acceptée
@@ -252,6 +252,25 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Conséquences** :
   - Un seul disque = pas de redondance (transitoire, ADR-012) ; migration vers le NAS en phase 16.
   - Mode opératoire : `docs/runbooks/sauvegarde-et-restauration.md` (écrit pendant la phase 7).
+  - Mise en œuvre précisée par **ADR-028** (2026-10-13).
+
+## ADR-028 — Coffre `pprod-01` : paquets Ubuntu, rest-server à garde-fou, un sous-dossier par déposant
+- **Date** : 2026-10-13 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027
+- **Contexte** : versions au 2026-10-13 — rest-server 0.14.0 (dernière officielle, mai 2025) est fourni tel quel par Ubuntu 26.04 (`restic-rest-server` 0.14.0-1, dépôt *universe*) ; restic : 0.18.1 chez Ubuntu (dépôt *main*), 0.19.1 en version officielle (juillet 2026).
+- **Décision** :
+  1. **restic et rest-server installés par apt** (paquets Ubuntu `restic`, `restic-rest-server`), sur PROD-01 comme sur `pprod-01`. Pas de binaire téléchargé à la main.
+  2. **Un script versionné** `scripts/coffre-sauvegardes.sh`, en sous-commandes lancées une par une (`pare-feu`, `rest-server`, puis `disque`).
+  3. **rest-server** : notre propre service systemd (`/etc/systemd/system/rest-server.service`, celui éventuellement fourni par le paquet est désactivé), utilisateur système `restic` sans connexion, port **8000**, options `--append-only --private-repos`. Durcissement systemd : écriture autorisée uniquement dans le dépôt.
+  4. **Garde-fou disque** : le service ne démarre **que si `/srv/sauvegardes` est un point de montage** (`ConditionPathIsMountPoint`). Disque absent (option `nofail`) = pas de rest-server = sauvegarde de la nuit en échec, visible.
+  5. **Un identifiant par déposant**, qui est aussi son sous-dossier (`--private-repos`) : PROD-01 = `prod-01` → dépôt `rest:http://192.168.1.51:8000/prod-01/`. Mot de passe haché (bcrypt) dans `/etc/rest-server/.htpasswd` (root:restic, 640) ; en clair seulement dans le gestionnaire de mots de passe et, plus tard, sur PROD-01.
+  6. **Pare-feu `pprod-01`** : tout refusé en entrée sauf SSH depuis `192.168.1.0/24` et le port 8000 depuis `192.168.1.16` uniquement. Les règles K3s de la phase 14 (`install-k3s.sh`) s'ajouteront sans conflit.
+- **Pourquoi** :
+  - *Point 1* : paquets signés par Ubuntu, même version sur les deux machines, mises à jour avec le système. restic 0.18.1 suffit (format de dépôt identique) ; passer à la 0.19 n'apporterait rien d'utile ici.
+  - *Point 4* : sans ce garde-fou, un disque débranché ferait écrire les sauvegardes **dans le dossier vide du SSD système**, en silence, jusqu'à le remplir.
+  - *Point 5* : un futur déposant (PPROD, phase 14) aura son propre identifiant et son propre dossier, sans pouvoir lire les sauvegardes de PROD-01.
+- **Conséquences** :
+  - Les dépôts Ubuntu peuvent garder la 0.18 longtemps ; à réévaluer si une fonction de restic 0.19+ devient nécessaire.
+  - `apache2-utils` installé sur `pprod-01` (commande `htpasswd`).
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
