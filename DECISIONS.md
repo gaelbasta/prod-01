@@ -272,6 +272,17 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Les dépôts Ubuntu peuvent garder la 0.18 longtemps ; à réévaluer si une fonction de restic 0.19+ devient nécessaire.
   - `apache2-utils` installé sur `pprod-01` (commande `htpasswd`).
 
+## ADR-029 — Sauvegarde nocturne de PROD-01 : script unique, 3 h, échec partiel = échec
+- **Date** : 2026-10-13 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027, ADR-028
+- **Décision** :
+  1. **Un script versionné** `scripts/sauvegarde-prod-01.sh`, copié sur PROD-01 dans `/usr/local/sbin/sauvegarde-prod-01`, en sous-commandes : `installer`, `initialiser` (création du dépôt, une fois), `lancer` (une sauvegarde), `activer` (timer).
+  2. **Chaque nuit à 3 h** (timer systemd, `Persistent=true` : machine éteinte à 3 h → sauvegarde au démarrage suivant), en priorité basse (CPU et disque).
+  3. **Ordre** : copies cohérentes des apps (PRISM) → copie de la base K3s (`sqlite3 .backup` + `PRAGMA integrity_check`) → `restic backup` de `/etc`, `/var/lib/rancher/k3s/server`, `/var/lib/rancher/k3s/storage` et des copies (`/var/lib/sauvegarde-prod-01`). Exclus : bases vivantes (K3s `state.db*`, PRISM `prism.sqlite*`), `kine.sock`, et `/var/lib/rancher/k3s/agent` (images, ~1,6 Go, se retéléchargent).
+  4. **Une étape en échec n'arrête pas les suivantes**, mais la sauvegarde est notée **en échec** (code ≠ 0, fichier `derniere-tentative`). `derniere-reussite` n'est écrit que si tout a réussi.
+  5. **Secrets sur PROD-01** dans `/etc/restic/` (root, 600) : `motdepasse` (restic) et `prod-01.env` (dépôt + identifiant rest-server). Saisis à l'installation, jamais dans Git ; originaux dans le gestionnaire de mots de passe (« restic – dépôt prod-01 », « rest-server pprod-01 – prod-01 »).
+- **Pourquoi** : une sauvegarde partielle vaut mieux que rien, mais ne doit jamais passer pour complète. 3 h : personne n'utilise PRISM. Volume constaté le 2026-10-13 : ~45 Mo (`/etc` 6,5 Mo, `server` 35 Mo, `storage` 1,3 Mo).
+- **Conséquences** : Home Assistant (phase 11) surveillera `/var/lib/sauvegarde-prod-01/derniere-reussite` (alerte au-delà de 26 h). Le timer n'est activé qu'après une première sauvegarde manuelle réussie.
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.
