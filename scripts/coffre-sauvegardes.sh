@@ -13,6 +13,7 @@
 # Rejouable (idempotent) : relancer une sous-commande ne casse rien.
 # =============================================================================
 set -euo pipefail
+trap 'echo "ERREUR : arrêt à la ligne $LINENO (commande : $BASH_COMMAND)" >&2' ERR
 
 [[ $EUID -eq 0 ]] || { echo "Lancer avec sudo."; exit 1; }
 
@@ -38,12 +39,14 @@ rest_server() {
   echo "==> Paquets Ubuntu (ADR-028)"
   apt-get update
   DEBIAN_FRONTEND=noninteractive apt-get install -y restic restic-rest-server apache2-utils
-  BIN="$(command -v rest-server)"
+  # Le paquet Ubuntu installe la commande sous le nom « restic-rest-server »
+  BIN="$(command -v restic-rest-server || command -v rest-server || true)"
+  [[ -n "$BIN" ]] || { echo "ERREUR : commande rest-server introuvable."; exit 1; }
   echo "rest-server : $BIN"
   restic version
   "$BIN" --version || true
 
-  echo "==> Service éventuellement fourni par le paquet : désactivé (on utilise le nôtre)"
+  echo "==> Service fourni par le paquet (restic-rest-server.service) : arrêté et désactivé (on utilise le nôtre)"
   for u in $(systemctl list-unit-files --no-legend 'restic-rest-server*' | awk '{print $1}'); do
     systemctl disable --now "$u" || true
   done
