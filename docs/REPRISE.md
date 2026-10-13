@@ -63,7 +63,7 @@ et proposer un nouvel ADR.
   - Images privées : token k3s-prod-01-pull (read:packages, sans expiration),
     secret ghcr-pull par namespace. docker login ghcr.io fait sur dev-linux.
   - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
-- PHASE 7 EN COURS — sauvegardes (ADR-026, ADR-027) :
+- PHASE 7 EN COURS — sauvegardes (ADR-026, ADR-027, ADR-028, ADR-029) :
   - Décidé le 2026-10-10 : N100 réinstallé AVANT l'arrivée du disque 3,5" (prévu
     13–14 oct.) en Ubuntu Server 26.04.1 + socle-os.sh, nom pprod-01, sans K3s
     (runbook installation-pprod-01.md). numobserver abandonné, rien conservé.
@@ -74,9 +74,28 @@ et proposer un nouvel ADR.
   - Validation : 3 tests de restauration (/etc, base K3s, volume de test).
   - ✅ 2026-10-10 : pprod-01 réinstallé (Beelink Mini S, BIOS State After G3 → S0,
     coupure testée), socle appliqué, `ssh pprod-01` par clé depuis les 2 postes.
-    Reste : nettoyage postes (bloc numobserver-prod sur Windows, vieux contextes kubectl).
-  - Prochaine étape : disque 3,5" (13–14 oct.) → montage /srv/sauvegardes, rest-server,
-    restic sur PROD-01, puis les 3 tests de restauration.
+  - ✅ 2026-10-13 : nettoyage des postes fait (bloc numobserver-prod retiré sur Windows,
+    clés rangées dans .ssh\archive-numobserver ; aucun vieux contexte kubectl).
+  - ✅ 2026-10-13 : disque Seagate IronWolf ST4000VN006 4 To (n° WW6AR4CY) dans un boîtier
+    CENMATE 2 baies USB (puce ASMedia, UAS, 5 Gb/s), baie 1 → /dev/sdb sur pprod-01
+    (le SSD système est /dev/sda). SMART OK, test court OK. Test LONG lancé le 13/10
+    à 18 h 51, fin prévue 14/10 vers 2 h 34 (`sudo smartctl -l selftest -d sat /dev/sdb`).
+  - ✅ 2026-10-13 : pprod-01 — `scripts/coffre-sauvegardes.sh pare-feu` (ufw : 22 depuis
+    le LAN, 8000 depuis 192.168.1.16 seul ; testé : PROD-01 → refus immédiat, dev-linux
+    → timeout) et `rest-server` (paquets apt restic 0.18.1 + restic-rest-server 0.14.0,
+    commande /usr/bin/restic-rest-server, service du paquet désactivé, notre service
+    rest-server.service activé mais PAS démarré : ConditionPathIsMountPoint=/srv/sauvegardes ;
+    utilisateur restic ; identifiant prod-01 dans /etc/rest-server/.htpasswd).
+  - ✅ 2026-10-13 : PROD-01 — `scripts/sauvegarde-prod-01.sh installer` (restic, sqlite3,
+    /etc/restic/{motdepasse,prod-01.env}, /usr/local/sbin/sauvegarde-prod-01, service +
+    timer 3 h NON activé). Gestionnaire : « restic – dépôt prod-01 »,
+    « rest-server pprod-01 – prod-01 ».
+  - Prochaine étape : lire le test SMART long → écrire la sous-commande `disque` de
+    coffre-sauvegardes.sh (vérif n° de série, ext4 étiquette sauvegardes, UUID + nofail,
+    /srv/sauvegardes/restic à restic:restic, démarrage rest-server) → forget/prune/check
+    sur pprod-01 (rétention à fixer, à lancer en utilisateur restic) → sur PROD-01 :
+    initialiser, lancer, vérifier (`restic ls latest`), activer → 3 tests de restauration
+    → runbook sauvegarde-et-restauration.md.
 - PHASE 8 COMMENCÉE (2026-10-11) : PRISM déployé sur https://prism.prod.gba-lab.win
   (image 0.9.0, chart 0.1.0, révision 1, volume prism-data 1 Gi, secrets ghcr-pull +
   prism-secrets) avec des DONNÉES D'ESSAI. Vraies données après validation phase 7.

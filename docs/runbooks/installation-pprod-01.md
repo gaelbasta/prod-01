@@ -162,8 +162,18 @@ Coupure de courant : débrancher la prise du N100 en marche, rebrancher sans tou
 
 | Poste | Reste | Action |
 |---|---|---|
-| PC Windows | bloc `Host numobserver-prod` (→ 192.168.1.51, clé `id_ed25519_numobserver_deploy`) dans `.ssh\config` | 🟨 à supprimer (inutile : clé plus autorisée) |
-| PC Windows, dev-linux | anciens contextes kubectl vers le K3s du N100 | 🟨 à lister (`kubectl config get-contexts`) puis supprimer |
+| PC Windows | bloc `Host numobserver-prod` (→ 192.168.1.51, clé `id_ed25519_numobserver_deploy`) dans `.ssh\config` | ✅ 2026-10-13 : bloc retiré (copie d'origine : `.ssh\config.backup-2026-10-13`) ; paire de clés **rangée** dans `.ssh\archive-numobserver\` (pas supprimée : a pu servir de *deploy key* GitHub) — à supprimer après quelques semaines sans problème |
+| PC Windows, dev-linux | anciens contextes kubectl vers le K3s du N100 | ✅ 2026-10-13 : aucun trouvé (Windows : `prod-01` seul ; dev-linux : `k3d-dev-local` + `prod-01`) |
+
+Commandes utilisées (PowerShell, dans `C:\Users\diyod\.ssh`) :
+```powershell
+Copy-Item config config.backup-2026-10-13
+(Get-Content config) | Select-Object -Skip 7 | Set-Content config   # parenthèses obligatoires : sinon « fichier en cours d'utilisation »
+New-Item -ItemType Directory -Force archive-numobserver | Out-Null
+Move-Item id_ed25519_numobserver_deploy, id_ed25519_numobserver_deploy.pub archive-numobserver\
+```
+Vérifier : `Get-Content config | Select-Object -First 3` (commence par `Host dev-linux`) puis `ssh prod-01 hostname; ssh pprod-01 hostname`.
+Revenir en arrière : `Copy-Item config.backup-2026-10-13 config -Force`.
 
 ## Revenir en arrière / dépanner
 

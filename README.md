@@ -34,7 +34,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | Nom | Matériel | Rôle | État |
 |---|---|---|---|
 | PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | K3s + HTTPS en service |
-| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Ubuntu Server 26.04.1 + socle (2026-10-10) ; disque de sauvegarde attendu |
+| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Ubuntu Server 26.04.1 + socle (2026-10-10) ; pare-feu + rest-server installés, disque IronWolf 4 To en test (2026-10-13) |
 | dev-linux | Workstation Ubuntu | Développement et build | En service |
 | Home Assistant | — | Surveillance et alertes | En service |
 | PC Windows (`DESKTOP-8IUGODI`) | MSI MS-7B17 | Poste d'administration (SSH, kubectl, k9s) | En service |
