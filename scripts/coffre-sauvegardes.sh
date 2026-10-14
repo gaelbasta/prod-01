@@ -8,7 +8,7 @@
 # Usage : une sous-commande à la fois, dans cet ordre, en vérifiant entre deux :
 #   sudo bash coffre-sauvegardes.sh pare-feu     # ufw : SSH (LAN) + rest-server (PROD-01 seul)
 #   sudo bash coffre-sauvegardes.sh rest-server  # paquets, utilisateur, identifiant, service
-#   (disque : ajouté après le test SMART long — formatage + montage /srv/sauvegardes)
+#   sudo bash coffre-sauvegardes.sh disque       # formate (une seule fois) + monte le disque, démarre rest-server
 #
 # Rejouable (idempotent) : relancer une sous-commande ne casse rien.
 # =============================================================================
@@ -24,6 +24,8 @@ POINT_MONTAGE="/srv/sauvegardes"  # disque 3,5" (monté par la sous-commande dis
 DEPOT="${POINT_MONTAGE}/restic"   # dossier servi par rest-server
 HTPASSWD="/etc/rest-server/.htpasswd"
 UTILISATEUR_REST="prod-01"        # identifiant rest-server de PROD-01 (= son sous-dossier)
+SERIE_DISQUE="WW6AR4CY"           # n° de série du disque de sauvegarde (Seagate IronWolf 4 To, lu par SMART)
+ETIQUETTE="sauvegardes"           # étiquette du système de fichiers
 
 pare_feu() {
   echo "==> Pare-feu ufw (ADR-027)"
@@ -99,8 +101,88 @@ EOF
   systemctl status rest-server.service --no-pager || true
 }
 
+trouver_disque() {  # affiche /dev/sdX du disque dont le n° de série SMART est SERIE_DISQUE
+  local d info
+  for d in /sys/block/sd*; do
+    d="/dev/$(basename "$d")"
+    info="$(smartctl -i -d sat "$d" 2>/dev/null || true)"
+    if grep -qE "^Serial Number: +${SERIE_DISQUE}$" <<<"$info"; then
+      echo "$d"; return 0
+    fi
+  done
+  return 1
+}
+
+disque() {
+  echo "==> Recherche du disque n° ${SERIE_DISQUE} (par SMART, pas par nom /dev/sdX)"
+  local DEV PART UUID
+  DEV="$(trouver_disque)" || { echo "ERREUR : disque ${SERIE_DISQUE} introuvable (boîtier allumé ? câble ?)."; exit 1; }
+  echo "Disque trouvé : ${DEV}"
+  # Garde-fou : jamais le disque qui porte le système
+  local montages
+  montages="$(lsblk -no MOUNTPOINTS "$DEV")"
+  if grep -qE '^/(boot.*)?$' <<<"$montages"; then
+    echo "ERREUR : ${DEV} porte le système. Abandon."; exit 1
+  fi
+  lsblk -o NAME,SIZE,TYPE,TRAN,FSTYPE,LABEL,MOUNTPOINTS "$DEV"
+
+  PART="$(blkid -t LABEL="$ETIQUETTE" -o device | grep "^${DEV}" || true)"
+  if [[ -n "$PART" ]]; then
+    echo "Partition '${ETIQUETTE}' déjà présente (${PART}) : PAS de formatage."
+  else
+    if [[ -n "$(lsblk -no FSTYPE "$DEV" | tr -d '[:space:]')" ]] || [[ $(lsblk -no NAME "$DEV" | wc -l) -gt 1 ]] \
+       || [[ -n "$(wipefs -n "$DEV" 2>/dev/null)" ]]; then
+      echo "ERREUR : ${DEV} contient déjà des partitions ou des données inconnues. Abandon (rien n'a été modifié)."; exit 1
+    fi
+    echo
+    echo "!!! ${DEV} (n° ${SERIE_DISQUE}) va être ENTIÈREMENT EFFACÉ puis formaté en ext4 '${ETIQUETTE}'."
+    read -r -p "Taper EFFACER pour continuer : " rep
+    [[ "$rep" == "EFFACER" ]] || { echo "Abandon (rien n'a été modifié)."; exit 1; }
+    echo "==> Table GPT + une partition sur tout le disque"
+    parted -s "$DEV" mklabel gpt mkpart "$ETIQUETTE" ext4 1MiB 100%
+    udevadm settle
+    PART="${DEV}1"
+    echo "==> ext4 : étiquette ${ETIQUETTE}, 0 % réservé à root, 1 inode par Mo (gros fichiers restic)"
+    mkfs.ext4 -L "$ETIQUETTE" -m 0 -T largefile "$PART"
+    udevadm settle
+  fi
+
+  UUID="$(blkid -s UUID -o value "$PART")"
+  [[ -n "$UUID" ]] || { echo "ERREUR : UUID illisible sur ${PART}."; exit 1; }
+  echo "UUID : ${UUID}"
+
+  echo "==> Point de montage ${POINT_MONTAGE} (verrouillé quand le disque est absent)"
+  if ! mountpoint -q "$POINT_MONTAGE"; then
+    [[ -d "$POINT_MONTAGE" ]] || install -d -m 755 "$POINT_MONTAGE"
+    chattr +i "$POINT_MONTAGE"   # dossier vide immuable : rien ne peut y écrire si le disque n'est pas monté
+  fi
+
+  echo "==> /etc/fstab (par UUID, nofail : le N100 démarre même sans le disque)"
+  if grep -q "$UUID" /etc/fstab; then
+    echo "Ligne déjà présente : inchangée."
+  else
+    cp -a /etc/fstab "/etc/fstab.avant-sauvegardes-$(date +%F)"
+    echo "UUID=${UUID}  ${POINT_MONTAGE}  ext4  defaults,noatime,nofail,x-systemd.device-timeout=15s  0  2  # disque de sauvegarde (ADR-027)" >> /etc/fstab
+  fi
+  systemctl daemon-reload
+  mountpoint -q "$POINT_MONTAGE" || mount "$POINT_MONTAGE"
+  findmnt "$POINT_MONTAGE"
+  df -h "$POINT_MONTAGE"
+
+  echo "==> Dossier du dépôt (propriétaire : restic)"
+  install -d -m 700 -o restic -g restic "$DEPOT"
+  ls -la "$POINT_MONTAGE"
+
+  echo "==> Démarrage de rest-server"
+  systemctl restart rest-server.service
+  sleep 2
+  systemctl status rest-server.service --no-pager
+  ss -tlnp | grep ":${PORT} " || { echo "ERREUR : rest-server n'écoute pas sur ${PORT}."; exit 1; }
+}
+
 case "${1:-}" in
   pare-feu)    pare_feu ;;
   rest-server) rest_server ;;
-  *) echo "Usage : sudo bash $0 {pare-feu|rest-server}"; exit 1 ;;
+  disque)      disque ;;
+  *) echo "Usage : sudo bash $0 {pare-feu|rest-server|disque}"; exit 1 ;;
 esac
