@@ -9,6 +9,9 @@
 #   sudo bash coffre-sauvegardes.sh pare-feu     # ufw : SSH (LAN) + rest-server (PROD-01 seul)
 #   sudo bash coffre-sauvegardes.sh rest-server  # paquets, utilisateur, identifiant, service
 #   sudo bash coffre-sauvegardes.sh disque       # formate (une seule fois) + monte le disque, démarre rest-server
+#   sudo bash coffre-sauvegardes.sh entretien-installer  # mot de passe restic, copie du script, timer du dimanche 5 h
+#   sudo coffre-sauvegardes entretien            # tri (forget --prune) + contrôle complet (check --read-data)
+#   sudo coffre-sauvegardes restic <commande>    # restic sur le dépôt prod-01, en utilisateur restic (ex. : snapshots)
 #
 # Rejouable (idempotent) : relancer une sous-commande ne casse rien.
 # =============================================================================
@@ -26,6 +29,12 @@ HTPASSWD="/etc/rest-server/.htpasswd"
 UTILISATEUR_REST="prod-01"        # identifiant rest-server de PROD-01 (= son sous-dossier)
 SERIE_DISQUE="WW6AR4CY"           # n° de série du disque de sauvegarde (Seagate IronWolf 4 To, lu par SMART)
 ETIQUETTE="sauvegardes"           # étiquette du système de fichiers
+DEPOT_PROD01="${DEPOT}/${UTILISATEUR_REST}"          # dossier du dépôt restic de PROD-01
+MDP_PROD01="/etc/restic/prod-01.motdepasse"          # mot de passe restic (root:restic 640)
+CIBLE="/usr/local/sbin/coffre-sauvegardes"           # copie installée (celle que lance le timer)
+ETAT="/var/lib/entretien-sauvegardes"                # traces pour Home Assistant (phase 11)
+# Rétention (ADR-030) : 14 jours, 8 semaines, 12 mois, 3 ans
+RETENTION=(--keep-daily 14 --keep-weekly 8 --keep-monthly 12 --keep-yearly 3)
 
 pare_feu() {
   echo "==> Pare-feu ufw (ADR-027)"
@@ -180,9 +189,92 @@ disque() {
   ss -tlnp | grep ":${PORT} " || { echo "ERREUR : rest-server n'écoute pas sur ${PORT}."; exit 1; }
 }
 
+# restic en utilisateur « restic » (les fichiers du dépôt doivent rester à lui, sinon rest-server ne peut plus les lire)
+restic_coffre() {
+  runuser -u restic -- env RESTIC_CACHE_DIR=/var/cache/restic-entretien \
+    restic -r "$DEPOT_PROD01" --password-file "$MDP_PROD01" "$@"
+}
+
+entretien_installer() {
+  echo "==> Mot de passe restic du dépôt prod-01 (« restic – dépôt prod-01 » du gestionnaire)"
+  install -d -m 750 -o root -g restic /etc/restic
+  if [[ -s "$MDP_PROD01" ]]; then
+    echo "Déjà présent : inchangé."
+  else
+    local a b
+    while true; do
+      read -r -s -p "Mot de passe restic : " a; echo
+      read -r -s -p "Confirmer : " b; echo
+      [[ -n "$a" && "$a" == "$b" ]] && break
+      echo "Vide ou différent, recommencer."
+    done
+    ( umask 027; printf '%s' "$a" > "$MDP_PROD01" )
+  fi
+  chown root:restic "$MDP_PROD01"; chmod 640 "$MDP_PROD01"
+  install -d -m 700 -o restic -g restic /var/cache/restic-entretien
+  install -d -m 755 "$ETAT"
+
+  echo "==> Vérification : le mot de passe ouvre-t-il le dépôt ?"
+  restic_coffre snapshots
+
+  echo "==> Copie du script dans ${CIBLE}"
+  install -m 750 -o root -g root "$0" "$CIBLE"
+
+  echo "==> Service et timer : chaque dimanche à 5 h"
+  cat > /etc/systemd/system/entretien-sauvegardes.service <<EOF
+# Géré par prod-01/scripts/coffre-sauvegardes.sh — ADR-027, ADR-030
+[Unit]
+Description=Entretien du dépôt restic prod-01 : tri + contrôle d'intégrité (ADR-030)
+RequiresMountsFor=${POINT_MONTAGE}
+ConditionPathIsMountPoint=${POINT_MONTAGE}
+
+[Service]
+Type=oneshot
+ExecStart=${CIBLE} entretien
+Nice=10
+IOSchedulingClass=idle
+EOF
+  cat > /etc/systemd/system/entretien-sauvegardes.timer <<EOF
+# Géré par prod-01/scripts/coffre-sauvegardes.sh — ADR-030
+[Unit]
+Description=Entretien hebdomadaire du dépôt restic (dimanche 5 h)
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+  systemctl daemon-reload
+  systemctl enable --now entretien-sauvegardes.timer
+  systemctl list-timers entretien-sauvegardes.timer --no-pager
+}
+
+entretien() {
+  mountpoint -q "$POINT_MONTAGE" || { echo "ERREUR : ${POINT_MONTAGE} n'est pas monté."; exit 1; }
+  echo "$(date -Is) en-cours" > "${ETAT}/derniere-tentative"
+  local echec=0
+  echo "==> Tri : ${RETENTION[*]}"
+  restic_coffre forget --host "$UTILISATEUR_REST" "${RETENTION[@]}" --prune || echec=1
+  echo "==> Contrôle complet (relit toutes les données)"
+  restic_coffre check --read-data || echec=1
+  if [[ $echec -eq 0 ]]; then
+    echo "$(date -Is) ok" > "${ETAT}/derniere-tentative"
+    date -Is > "${ETAT}/dernier-entretien-reussi"
+    echo "Entretien RÉUSSI"
+  else
+    echo "$(date -Is) echec" > "${ETAT}/derniere-tentative"
+    echo "Entretien en ÉCHEC"; exit 1
+  fi
+}
+
 case "${1:-}" in
   pare-feu)    pare_feu ;;
   rest-server) rest_server ;;
   disque)      disque ;;
-  *) echo "Usage : sudo bash $0 {pare-feu|rest-server|disque}"; exit 1 ;;
+  entretien-installer) entretien_installer ;;
+  entretien)   entretien ;;
+  restic)      shift; restic_coffre "$@" ;;
+  *) echo "Usage : sudo bash $0 {pare-feu|rest-server|disque|entretien-installer|entretien|restic …}"; exit 1 ;;
 esac

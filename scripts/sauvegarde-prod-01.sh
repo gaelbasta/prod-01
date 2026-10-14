@@ -8,6 +8,7 @@
 #   sudo sauvegarde-prod-01 initialiser          # crée le dépôt restic (une seule fois, disque de pprod-01 monté)
 #   sudo sauvegarde-prod-01 lancer               # une sauvegarde complète (c'est ce que lance le timer)
 #   sudo sauvegarde-prod-01 activer              # active le timer nocturne (après une 1re sauvegarde réussie)
+#   sudo sauvegarde-prod-01 restic <commande>    # restic avec les réglages du dépôt (ex. : snapshots, ls latest, restore)
 #
 # Ce que fait « lancer » :
 #   1. copie cohérente de chaque app qui en a une (PRISM : contrat ADR-027) ;
@@ -194,5 +195,6 @@ case "${1:-}" in
   initialiser) initialiser ;;
   lancer)      lancer ;;
   activer)     activer ;;
-  *) echo "Usage : sudo $0 {installer|initialiser|lancer|activer}"; exit 1 ;;
+  restic)      shift; charger_env; restic "$@" ;;
+  *) echo "Usage : sudo $0 {installer|initialiser|lancer|activer|restic …}"; exit 1 ;;
 esac

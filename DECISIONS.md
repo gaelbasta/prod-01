@@ -284,6 +284,20 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Pourquoi** : une sauvegarde partielle vaut mieux que rien, mais ne doit jamais passer pour complète. 3 h : personne n'utilise PRISM. Volume constaté le 2026-10-13 : ~45 Mo (`/etc` 6,5 Mo, `server` 35 Mo, `storage` 1,3 Mo).
 - **Conséquences** : Home Assistant (phase 11) surveillera `/var/lib/sauvegarde-prod-01/derniere-reussite` (alerte au-delà de 26 h). Le timer n'est activé qu'après une première sauvegarde manuelle réussie.
 
+## ADR-030 — Entretien du dépôt sur `pprod-01` : rétention 14 j / 8 sem / 12 mois / 3 ans, le dimanche à 5 h
+- **Date** : 2026-10-14 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027 (point 3)
+- **Décision** :
+  1. **Rétention** (choix de Gael) : les 14 derniers jours, puis 1 instantané par semaine sur 8 semaines, 1 par mois sur 12 mois, 1 par an sur 3 ans (≈ 37 instantanés au plus) : `restic forget --host prod-01 --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --keep-yearly 3 --prune`.
+  2. **Contrôle complet chaque semaine** : `restic check --read-data` (relit et vérifie toutes les données, pas seulement la structure).
+  3. **Chaque dimanche à 5 h** (timer systemd `entretien-sauvegardes.timer`, `Persistent=true`), loin de la sauvegarde de 3 h ; tri puis contrôle ; une étape en échec = entretien en échec. Traces : `/var/lib/entretien-sauvegardes/dernier-entretien-reussi` et `derniere-tentative` (Home Assistant, phase 11).
+  4. **Exécuté directement sur le dossier du dépôt** (`/srv/sauvegardes/restic/prod-01`), jamais via rest-server, et **en utilisateur `restic`** (`runuser`) : un fichier créé par root dans le dépôt deviendrait illisible pour rest-server.
+  5. Mot de passe restic sur `pprod-01` : `/etc/restic/prod-01.motdepasse` (root:restic, 640), saisi à l'installation (`coffre-sauvegardes.sh entretien-installer`).
+  6. Commande de confort sur les deux machines : `sudo sauvegarde-prod-01 restic <commande>` (PROD-01, via rest-server) et `sudo coffre-sauvegardes restic <commande>` (`pprod-01`, accès direct).
+- **Pourquoi** : la place n'est pas un problème (~6 Mo stockés par instantané le 2026-10-14, 3,7 To disponibles) ; la rétention vise à pouvoir retrouver un état ancien de PRISM (données financières) jusqu'à 3 ans. Relire toutes les données chaque semaine ne coûte presque rien à ce volume et détecte une corruption du disque en une semaine au plus.
+- **Conséquences** :
+  - Si le volume grossit beaucoup (vraies données, autres apps), passer à un contrôle partiel (`--read-data-subset`) en semaine et complet une fois par mois.
+  - Constaté le 2026-10-14 : `restic forget` lancé depuis PROD-01 est bien refusé par rest-server (`403 Forbidden`, instantané conservé) — mais restic rend **code 0** malgré l'échec : ne jamais se fier au seul code de `forget`.
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.
