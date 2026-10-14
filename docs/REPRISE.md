@@ -45,8 +45,8 @@ et proposer un nouvel ADR.
   un chart plateforme commun (profils app/static) + values-<env>.yaml par projet.
 
 ## Où on en est
-- Phases 0 à 7 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
-  + postes d'admin, HTTPS + chart plateforme, wiki, sauvegardes).
+- Phases 0 à 8 : ✅ (niveau 1 terminé) (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
+  + postes d'admin, HTTPS + chart plateforme, wiki, sauvegardes, PRISM).
 - Phase 5 en bref (ADR-022, ADR-023) : cert-manager v1.21.2, wildcard
   *.prod.gba-lab.win servi par défaut par Traefik, redirection HTTP → HTTPS ;
   chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé).
@@ -81,18 +81,29 @@ et proposer un nouvel ADR.
   - Validé : 3 tests de restauration (fichier /etc, base K3s, volume d'app détruit puis
     restauré — app de test tests/values-restauration-prod.yaml) + garde-fous (pare-feu,
     append-only 403, disque absent, redémarrage). Postes nettoyés (numobserver).
-- À traiter (hors phase) : PROD-01 annonçait le 2026-10-14 « 11 standard security updates »
-  en attente malgré unattended-upgrades (ADR-018) → comprendre pourquoi ; 2 mises à jour de
-  firmware signalées (fwupdmgr) ; « 4 not upgraded » sur pprod-01.
-- PHASE 8 EN COURS : PRISM déployé le 2026-10-11 sur https://prism.prod.gba-lab.win
-  (image 0.9.0, chart 0.1.0, révision 1, volume prism-data 1 Gi, secrets ghcr-pull +
-  prism-secrets) avec des DONNÉES D'ESSAI. Phase 7 validée → vraies données AUTORISÉES
-  (prochaine étape). PRISM écrit une copie par jour dans /data/sauvegardes
-  (prism-AAAA-MM-JJ.sqlite) : vérifier que PRISM supprime les anciennes (volume 1 Gi).
-  Contrat sauvegarde : le script restic de PROD-01 appelle d'abord
-  `k3s kubectl -n prism exec deploy/prism -- node src/serveur/sauvegarder.ts`
-  (code 0 = copie cohérente dans /data/sauvegardes) ; seuls les fichiers de
-  /data/sauvegardes sont fiables, jamais prism.sqlite/-wal/-shm.
+- Phase 8 ✅ 2026-10-14 — PRISM en production avec les vraies données :
+  - Base d'essai effacée (helm uninstall + delete pvc, secrets conservés), redéploiement,
+    /data/sauvegardes recréé ; 4 CSV réels importés (2026 complet ; 2 exports PayPal à refaire).
+  - Sauvegarde manuelle immédiate : instantané restic 9f73631e (vraies données, avant 1.0.0).
+  - PRISM 1.0.0 (commit PRISM 92af28d, image ghcr.io/gaelbasta/prism:1.0.0, sans migration de
+    base) : révision Helm 2 ; retour arrière possible : helm rollback prism 1 (0.9.0).
+  - Volume prism-data : pvc-ffe792d0-… (l'exclusion restic *_prism_prism-data/prism.sqlite* suit).
+  - PRISM garde lui-même 14 copies quotidiennes + 12 mensuelles dans /data/sauvegardes
+    (fait sa copie vers 3 h 05). Contrat : `k3s kubectl -n prism exec deploy/prism --
+    node src/serveur/sauvegarder.ts` (code 0) ; jamais prism.sqlite/-wal/-shm.
+- Mises à jour (analysé le 2026-10-14) : unattended-upgrades fonctionne (libx11 installé le
+  13/10) ; les 11 correctifs de sécurité vus le 14/10 sont arrivés après le passage de 6 h 06 →
+  installation prévue le 15/10 à 6 h 06 À VÉRIFIER :
+  `ssh -t prod-01 'sudo grep -A3 "2026-10-15 06:0" /var/log/unattended-upgrades/unattended-upgrades.log'`.
+  Les paquets de resolute-updates (tzdata, open-vm-tools…) ne s'installent jamais seuls (voulu,
+  ADR-018) → `sudo apt upgrade` manuel ~1×/mois, à ajouter au runbook socle-os. open-vm-tools
+  inutile sur machine physique (à désinstaller un jour). 2 mises à jour de firmware (fwupdmgr)
+  et « 4 not upgraded » sur pprod-01 : à regarder.
+- À vérifier le 15/10 : 1re sauvegarde automatique de 3 h
+  (`ssh -t prod-01 'cat /var/lib/sauvegarde-prod-01/derniere-tentative'` → « … ok »).
+- Wiki à reconstruire pour publier le runbook sauvegarde-et-restauration (runbook wiki.md, B).
+- PROCHAINE PHASE (niveau 2) : 10 Sealed Secrets, 11 Monitoring Home Assistant (dont l'âge de
+  derniere-reussite / dernier-entretien-reussi), 12 Tailscale, 13 Landing page.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES
   (voir charts/plateforme/README.md).
 ```
