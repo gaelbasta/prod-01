@@ -34,7 +34,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 | Nom | Matériel | Rôle | État |
 |---|---|---|---|
 | PROD-01 | GMKtec K8 Plus — Ryzen 7 8845HS, 32 Go, NVMe 1 To | Production | K3s + HTTPS en service |
-| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Ubuntu Server 26.04.1 + socle (2026-10-10) ; pare-feu + rest-server installés, disque IronWolf 4 To en test (2026-10-13) |
+| `pprod-01` (N100, ex-`gbaubu02p`) | Mini-PC Intel N100, SSD 512 Go | Cible de sauvegarde (ADR-027), puis PPROD (phase 14) | Ubuntu Server 26.04.1 + socle (2026-10-10) ; coffre de sauvegarde en service : disque IronWolf 4 To, rest-server append-only (2026-10-14) |
 | dev-linux | Workstation Ubuntu | Développement et build | En service |
 | Home Assistant | — | Surveillance et alertes | En service |
 | PC Windows (`DESKTOP-8IUGODI`) | MSI MS-7B17 | Poste d'administration (SSH, kubectl, k9s) | En service |
@@ -63,6 +63,7 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | Déployer une app | `helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait` ([runbook](docs/runbooks/deployer-une-app.md)) |
 | Accès | LAN uniquement (en 4G : injoignable, voulu) ; extérieur via Tailscale en phase 12 |
 | Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, données d'essai uniquement jusqu'à la fin de la phase 7) |
+| Sauvegardes | chaque nuit à 3 h vers `pprod-01` (restic, append-only), entretien le dimanche à 5 h — [runbook](docs/runbooks/sauvegarde-et-restauration.md) |
 | Images privées | secret `ghcr-pull` dans le namespace du projet (token `k3s-prod-01-pull`, ADR-024) |
 | Tests de fumée | sans Helm : `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win · avec le chart : `tests/values-smoke-prod.yaml` → https://smoke.prod.gba-lab.win |
 

@@ -13,6 +13,6 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [https-certificats.md](https-certificats.md) (cert-manager, Let's Encrypt, wildcard, redirection HTTPS) | 5 | ✅ |
 | [deployer-une-app.md](deployer-une-app.md) (chart plateforme : déployer, mettre à jour, revenir en arrière, publier le chart) | 5 | ✅ |
 | [wiki.md](wiki.md) (construire, publier, mettre à jour le wiki ; ajouter un projet) | 6 | ✅ |
-| [installation-pprod-01.md](installation-pprod-01.md) (N100 : BIOS, Ubuntu Server, socle, clés SSH) | 7 | ✅ (nettoyage des postes 🟨) |
-| sauvegarde-et-restauration.md | 7 | ⬜ |
+| [installation-pprod-01.md](installation-pprod-01.md) (N100 : BIOS, Ubuntu Server, socle, clés SSH) | 7 | ✅ |
+| [sauvegarde-et-restauration.md](sauvegarde-et-restauration.md) (disque, coffre, sauvegarde nocturne, entretien, restaurer, garde-fous) | 7 | ✅ |
 | redemarrer-prod-01.md | — | ⬜ |

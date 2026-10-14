@@ -232,7 +232,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Mise en œuvre (2026-10-10)** : Beelink Mini S (BIOS ADLNV105, non flashé ; seul réglage modifié : *State After G3* → S0, redémarrage après coupure testé). Ubuntu Server 26.04.1 installé, partitionnement conforme, `socle-os.sh` appliqué sans modification. Accès par clé depuis dev-linux et le PC Windows, mots de passe refusés.
 
 ## ADR-027 — Sauvegardes : restic sur PROD-01 → rest-server « append-only » sur `pprod-01`
-- **Date** : 2026-10-10 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-012
+- **Date** : 2026-10-10 · **Statut** : Acceptée (appliquée et validée le 2026-10-14 : 3 tests de restauration réussis) · **Précise** : ADR-012
 - **Décision** :
   1. **Sur `pprod-01` (le coffre)** : le disque 3,5" (ext4, étiquette `sauvegardes`) est monté sur `/srv/sauvegardes` **par son UUID**, avec l'option `nofail` (le N100 démarre même disque débranché). **rest-server** y tourne comme service systemd (hors K3s, ADR-012), sous un utilisateur système dédié, en mode **`--append-only`**, protégé par un identifiant/mot de passe (htpasswd). Pare-feu `ufw` : port de rest-server ouvert **à 192.168.1.16 uniquement**, SSH depuis le LAN.
   2. **Sur PROD-01 (le déposant)** : restic, lancé **chaque nuit** par un timer systemd. Le script (versionné dans `scripts/`) :
@@ -251,11 +251,11 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Validation de la phase 7** : 3 tests de restauration réussis — (1) un fichier de `/etc` restauré et comparé à l'original ; (2) la base K3s restaurée et vérifiée (`PRAGMA integrity_check`) ; (3) un volume de test (chart plateforme) écrit, sauvegardé, supprimé, puis restauré.
 - **Conséquences** :
   - Un seul disque = pas de redondance (transitoire, ADR-012) ; migration vers le NAS en phase 16.
-  - Mode opératoire : `docs/runbooks/sauvegarde-et-restauration.md` (écrit pendant la phase 7).
+  - Mode opératoire : [runbook sauvegarde-et-restauration.md](docs/runbooks/sauvegarde-et-restauration.md).
   - Mise en œuvre précisée par **ADR-028** (2026-10-13).
 
 ## ADR-028 — Coffre `pprod-01` : paquets Ubuntu, rest-server à garde-fou, un sous-dossier par déposant
-- **Date** : 2026-10-13 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027
+- **Date** : 2026-10-13 · **Statut** : Acceptée (appliquée le 2026-10-13/14) · **Précise** : ADR-027
 - **Contexte** : versions au 2026-10-13 — rest-server 0.14.0 (dernière officielle, mai 2025) est fourni tel quel par Ubuntu 26.04 (`restic-rest-server` 0.14.0-1, dépôt *universe*) ; restic : 0.18.1 chez Ubuntu (dépôt *main*), 0.19.1 en version officielle (juillet 2026).
 - **Décision** :
   1. **restic et rest-server installés par apt** (paquets Ubuntu `restic`, `restic-rest-server`), sur PROD-01 comme sur `pprod-01`. Pas de binaire téléchargé à la main.
@@ -274,7 +274,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - `apache2-utils` installé sur `pprod-01` (commande `htpasswd`).
 
 ## ADR-029 — Sauvegarde nocturne de PROD-01 : script unique, 3 h, échec partiel = échec
-- **Date** : 2026-10-13 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027, ADR-028
+- **Date** : 2026-10-13 · **Statut** : Acceptée (appliquée le 2026-10-14, timer actif) · **Précise** : ADR-027, ADR-028
 - **Décision** :
   1. **Un script versionné** `scripts/sauvegarde-prod-01.sh`, copié sur PROD-01 dans `/usr/local/sbin/sauvegarde-prod-01`, en sous-commandes : `installer`, `initialiser` (création du dépôt, une fois), `lancer` (une sauvegarde), `activer` (timer).
   2. **Chaque nuit à 3 h** (timer systemd, `Persistent=true` : machine éteinte à 3 h → sauvegarde au démarrage suivant), en priorité basse (CPU et disque).
@@ -285,7 +285,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Conséquences** : Home Assistant (phase 11) surveillera `/var/lib/sauvegarde-prod-01/derniere-reussite` (alerte au-delà de 26 h). Le timer n'est activé qu'après une première sauvegarde manuelle réussie.
 
 ## ADR-030 — Entretien du dépôt sur `pprod-01` : rétention 14 j / 8 sem / 12 mois / 3 ans, le dimanche à 5 h
-- **Date** : 2026-10-14 · **Statut** : Acceptée (mise en œuvre en phase 7) · **Précise** : ADR-027 (point 3)
+- **Date** : 2026-10-14 · **Statut** : Acceptée (appliquée le 2026-10-14, timer actif) · **Précise** : ADR-027 (point 3)
 - **Décision** :
   1. **Rétention** (choix de Gael) : les 14 derniers jours, puis 1 instantané par semaine sur 8 semaines, 1 par mois sur 12 mois, 1 par an sur 3 ans (≈ 37 instantanés au plus) : `restic forget --host prod-01 --keep-daily 14 --keep-weekly 8 --keep-monthly 12 --keep-yearly 3 --prune`.
   2. **Contrôle complet chaque semaine** : `restic check --read-data` (relit et vérifie toutes les données, pas seulement la structure).

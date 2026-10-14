@@ -45,8 +45,8 @@ et proposer un nouvel ADR.
   un chart plateforme commun (profils app/static) + values-<env>.yaml par projet.
 
 ## Où on en est
-- Phases 0 à 6 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
-  + postes d'admin, HTTPS + chart plateforme, wiki).
+- Phases 0 à 7 : ✅ (préparation, audit matériel, Ubuntu, socle OS, K3s + pare-feu
+  + postes d'admin, HTTPS + chart plateforme, wiki, sauvegardes).
 - Phase 5 en bref (ADR-022, ADR-023) : cert-manager v1.21.2, wildcard
   *.prod.gba-lab.win servi par défaut par Traefik, redirection HTTP → HTTPS ;
   chart plateforme 0.1.0 sur oci://ghcr.io/gaelbasta/charts/plateforme (privé).
@@ -63,42 +63,32 @@ et proposer un nouvel ADR.
   - Images privées : token k3s-prod-01-pull (read:packages, sans expiration),
     secret ghcr-pull par namespace. docker login ghcr.io fait sur dev-linux.
   - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
-- PHASE 7 EN COURS — sauvegardes (ADR-026, ADR-027, ADR-028, ADR-029) :
-  - Décidé le 2026-10-10 : N100 réinstallé AVANT l'arrivée du disque 3,5" (prévu
-    13–14 oct.) en Ubuntu Server 26.04.1 + socle-os.sh, nom pprod-01, sans K3s
-    (runbook installation-pprod-01.md). numobserver abandonné, rien conservé.
-  - Architecture : restic sur PROD-01 (timer nocturne, copie SQLite de K3s + token,
-    /etc, volumes) → rest-server --append-only sur pprod-01, disque monté
-    /srv/sauvegardes (UUID, nofail), ufw limité à 192.168.1.16 ; forget/prune/check
-    sur pprod-01 ; mot de passe restic aussi dans le gestionnaire de mots de passe.
-  - Validation : 3 tests de restauration (/etc, base K3s, volume de test).
-  - ✅ 2026-10-10 : pprod-01 réinstallé (Beelink Mini S, BIOS State After G3 → S0,
-    coupure testée), socle appliqué, `ssh pprod-01` par clé depuis les 2 postes.
-  - ✅ 2026-10-13 : nettoyage des postes fait (bloc numobserver-prod retiré sur Windows,
-    clés rangées dans .ssh\archive-numobserver ; aucun vieux contexte kubectl).
-  - ✅ 2026-10-13 : disque Seagate IronWolf ST4000VN006 4 To (n° WW6AR4CY) dans un boîtier
-    CENMATE 2 baies USB (puce ASMedia, UAS, 5 Gb/s), baie 1 → /dev/sdb sur pprod-01
-    (le SSD système est /dev/sda). SMART OK, test court OK. Test LONG lancé le 13/10
-    à 18 h 51, fin prévue 14/10 vers 2 h 34 (`sudo smartctl -l selftest -d sat /dev/sdb`).
-  - ✅ 2026-10-13 : pprod-01 — `scripts/coffre-sauvegardes.sh pare-feu` (ufw : 22 depuis
-    le LAN, 8000 depuis 192.168.1.16 seul ; testé : PROD-01 → refus immédiat, dev-linux
-    → timeout) et `rest-server` (paquets apt restic 0.18.1 + restic-rest-server 0.14.0,
-    commande /usr/bin/restic-rest-server, service du paquet désactivé, notre service
-    rest-server.service activé mais PAS démarré : ConditionPathIsMountPoint=/srv/sauvegardes ;
-    utilisateur restic ; identifiant prod-01 dans /etc/rest-server/.htpasswd).
-  - ✅ 2026-10-13 : PROD-01 — `scripts/sauvegarde-prod-01.sh installer` (restic, sqlite3,
-    /etc/restic/{motdepasse,prod-01.env}, /usr/local/sbin/sauvegarde-prod-01, service +
-    timer 3 h NON activé). Gestionnaire : « restic – dépôt prod-01 »,
-    « rest-server pprod-01 – prod-01 ».
-  - Prochaine étape : lire le test SMART long → écrire la sous-commande `disque` de
-    coffre-sauvegardes.sh (vérif n° de série, ext4 étiquette sauvegardes, UUID + nofail,
-    /srv/sauvegardes/restic à restic:restic, démarrage rest-server) → forget/prune/check
-    sur pprod-01 (rétention à fixer, à lancer en utilisateur restic) → sur PROD-01 :
-    initialiser, lancer, vérifier (`restic ls latest`), activer → 3 tests de restauration
-    → runbook sauvegarde-et-restauration.md.
-- PHASE 8 COMMENCÉE (2026-10-11) : PRISM déployé sur https://prism.prod.gba-lab.win
+- Phase 7 ✅ 2026-10-14 — sauvegardes (ADR-026 à ADR-030, runbook sauvegarde-et-restauration.md) :
+  - pprod-01 (Beelink N100, 192.168.1.51) = COFFRE : disque Seagate IronWolf 4 To n° WW6AR4CY
+    (boîtier USB CENMATE, puce ASMedia) monté /srv/sauvegardes (UUID d5c73bd1-…, nofail,
+    chattr +i sur le point de montage vide) ; rest-server 0.14.0 (paquet apt, commande
+    /usr/bin/restic-rest-server, notre service rest-server.service) --append-only
+    --private-repos, port 8000 ouvert à 192.168.1.16 seul (ufw) ; utilisateur système restic.
+  - PROD-01 : `sudo sauvegarde-prod-01 lancer` chaque nuit à 3 h (timer) : copie PRISM →
+    copie K3s (sqlite3 .backup) → restic backup → traces /var/lib/sauvegarde-prod-01/
+    {derniere-tentative,derniere-reussite}. Dépôt rest:http://192.168.1.51:8000/prod-01/
+    (id 362bcd9da7). Raccourci : `sudo sauvegarde-prod-01 restic <commande>`.
+  - pprod-01 : entretien le dimanche à 5 h (forget --prune 14 j/8 sem/12 mois/3 ans +
+    check --read-data, en utilisateur restic). Raccourci : `sudo coffre-sauvegardes restic …`.
+  - Secrets : gestionnaire « restic – dépôt prod-01 » et « rest-server pprod-01 – prod-01 » ;
+    PROD-01 /etc/restic/{motdepasse,prod-01.env} ; pprod-01 /etc/restic/prod-01.motdepasse,
+    /etc/rest-server/.htpasswd.
+  - Validé : 3 tests de restauration (fichier /etc, base K3s, volume d'app détruit puis
+    restauré — app de test tests/values-restauration-prod.yaml) + garde-fous (pare-feu,
+    append-only 403, disque absent, redémarrage). Postes nettoyés (numobserver).
+- À traiter (hors phase) : PROD-01 annonçait le 2026-10-14 « 11 standard security updates »
+  en attente malgré unattended-upgrades (ADR-018) → comprendre pourquoi ; 2 mises à jour de
+  firmware signalées (fwupdmgr) ; « 4 not upgraded » sur pprod-01.
+- PHASE 8 EN COURS : PRISM déployé le 2026-10-11 sur https://prism.prod.gba-lab.win
   (image 0.9.0, chart 0.1.0, révision 1, volume prism-data 1 Gi, secrets ghcr-pull +
-  prism-secrets) avec des DONNÉES D'ESSAI. Vraies données après validation phase 7.
+  prism-secrets) avec des DONNÉES D'ESSAI. Phase 7 validée → vraies données AUTORISÉES
+  (prochaine étape). PRISM écrit une copie par jour dans /data/sauvegardes
+  (prism-AAAA-MM-JJ.sqlite) : vérifier que PRISM supprime les anciennes (volume 1 Gi).
   Contrat sauvegarde : le script restic de PROD-01 appelle d'abord
   `k3s kubectl -n prism exec deploy/prism -- node src/serveur/sauvegarder.ts`
   (code 0 = copie cohérente dans /data/sauvegardes) ; seuls les fichiers de

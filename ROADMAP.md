@@ -15,8 +15,8 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | 4 | K3s | K3s v1.36.5 mono-nœud, pare-feu ufw, kubectl + k9s + helm sur PROD-01, PC Windows et dev-linux, test de fumée `whoami` OK | ✅ 2026-10-10 |
 | 5 | HTTPS + chart plateforme | cert-manager v1.21.2 + Let's Encrypt DNS-01 Cloudflare, wildcard `*.prod.gba-lab.win` servi par défaut, redirection HTTP → HTTPS (ADR-022) · chart plateforme 0.1.0 publié sur GHCR, testé k3d puis prod, mises à jour sans coupure (ADR-023) | ✅ 2026-10-10 |
 | 6 | Wiki | MkDocs Material déployé avec le profil « static » ; ce repo y devient lisible (ADR-024, ADR-025) — https://wiki.prod.gba-lab.win | ✅ 2026-10-10 |
-| 7 | Sauvegardes | Réinstallation du N100 en `pprod-01` (OS + socle, ADR-026) · restic → rest-server append-only, disque 3,5" sur `pprod-01` (ADR-027) ; **test de restauration réussi** | 🟨 |
-| 8 | PRISM | Mise en production, puis vraies données — déployé le 2026-10-11 avec des **données d'essai** (image 0.9.0) ; **vraies données seulement après la validation de la phase 7** | 🟨 |
+| 7 | Sauvegardes | Réinstallation du N100 en `pprod-01` (OS + socle, ADR-026) · restic → rest-server append-only, disque 3,5" sur `pprod-01` (ADR-027 à 030) ; sauvegarde chaque nuit à 3 h, entretien le dimanche ; **3 tests de restauration réussis** ([runbook](docs/runbooks/sauvegarde-et-restauration.md)) | ✅ 2026-10-14 |
+| 8 | PRISM | Mise en production, puis vraies données — déployé le 2026-10-11 avec des **données d'essai** (image 0.9.0) ; phase 7 validée le 2026-10-14 → **vraies données autorisées** | 🟨 |
 
 ## Niveau 2 — Le confort (après PRISM)
 
