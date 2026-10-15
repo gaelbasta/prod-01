@@ -1,0 +1,20 @@
+# Sealed Secrets sur PROD-01 (ADR-008, ADR-021, ADR-032)
+# Chart : sealed-secrets/sealed-secrets (https://bitnami.github.io/sealed-secrets)  --version 2.20.0 (app 0.40.0)
+# Installer / mettre à jour :
+#   helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets \
+#     --version 2.20.0 -n kube-system \
+#     -f platform/sealed-secrets/values-prod.yaml --kube-context prod-01 --wait
+
+# Nom attendu par défaut par kubeseal : pas besoin de --controller-name à chaque commande.
+fullnameOverride: sealed-secrets-controller
+
+# Renouvellement de la clé DÉSACTIVÉ (ADR-032, option A) : une seule clé, sauvegardée
+# dans le gestionnaire de mots de passe + chaque nuit par restic (base K3s).
+keyrenewperiod: "0"
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
