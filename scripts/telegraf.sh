@@ -65,14 +65,25 @@ else
   rm -f "$TMP_SUDO"; echo "ERREUR : règle sudo invalide, NON installée (sudo intact)."; exit 1
 fi
 
-echo "==> Script d'état et configuration"
+echo "==> Script d'état"
 install -m 755 "${ICI}/telegraf-etat.sh" /usr/local/bin/telegraf-etat
+
+echo "==> Test à blanc de la NOUVELLE configuration (une collecte, en utilisateur telegraf, rien n'est envoyé)"
+# La configuration n'est mise en place que si ce test réussit : une config invalide ne remplace
+# jamais celle qui tourne (Telegraf continue avec l'ancienne).
+TMP_CONF="$(mktemp --suffix=.conf)"; install -m 644 "$CONF" "$TMP_CONF"
+JOURNAL_TEST="$(mktemp)"
+if ! runuser -u telegraf -- telegraf --config "$TMP_CONF" --test > "$JOURNAL_TEST" 2>&1; then
+  grep -E 'E!' "$JOURNAL_TEST" || tail -n 20 "$JOURNAL_TEST"
+  rm -f "$TMP_CONF" "$JOURNAL_TEST"
+  echo "ERREUR : configuration refusée par Telegraf, NON installée (l'ancienne reste en service)."; exit 1
+fi
+grep -E '^> (etat_systeme|sauvegarde|entretien|coffre|smart_device|http_response|x509_cert|disk,)|E!' "$JOURNAL_TEST" || true
+rm -f "$TMP_CONF" "$JOURNAL_TEST"
+
+echo "==> Configuration mise en place"
 [[ -f /etc/telegraf/telegraf.conf.origine ]] || cp -a /etc/telegraf/telegraf.conf /etc/telegraf/telegraf.conf.origine
 install -m 644 "$CONF" /etc/telegraf/telegraf.conf
-
-echo "==> Test à blanc (une collecte, en utilisateur telegraf, sans rien envoyer)"
-runuser -u telegraf -- telegraf --config /etc/telegraf/telegraf.conf --config-directory /etc/telegraf/telegraf.d --test 2>&1 \
-  | grep -E '^> (etat_systeme|sauvegarde|entretien|coffre|smart_device|http_response|x509_cert|disk,)|E!' || true
 
 echo "==> Démarrage"
 systemctl enable telegraf
