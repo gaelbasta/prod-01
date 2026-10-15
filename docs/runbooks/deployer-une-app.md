@@ -119,6 +119,8 @@ helm upgrade --install … (la commande de l'étape 3)
 wait                                                              # attendu : « 300 200 »
 ```
 
+**5. Surveiller** (nouveau projet uniquement, ADR-031) : ajouter `https://<projet>.prod.gba-lab.win<healthPath>` à `urls` dans `monitoring/telegraf/pprod-01.conf`, commit + push, puis rejouer `telegraf.sh` sur `pprod-01` ([runbook surveillance](surveillance.md), section D). Si le projet a des données : sa copie cohérente dans `scripts/sauvegarde-prod-01.sh` (PLATFORM_STANDARD, point 6).
+
 **Si le déploiement expire** :
 ```bash
 kubectl --context prod-01 -n <projet> get pods

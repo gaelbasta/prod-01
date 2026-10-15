@@ -102,8 +102,23 @@ et proposer un nouvel ADR.
 - ✅ 15/10 : 1re sauvegarde automatique de 3 h réussie (instantané 8f9308e8). Contrôle :
   `ssh -t prod-01 'sudo cat /var/lib/sauvegarde-prod-01/derniere-tentative'` (sudo obligatoire).
 - Wiki reconstruit le 14/10 après le push de la phase 8.
-- PROCHAINE PHASE (niveau 2) : 10 Sealed Secrets, 11 Monitoring Home Assistant (dont l'âge de
-  derniere-reussite / dernier-entretien-reussi), 12 Tailscale, 13 Landing page.
+- Phase 11 ✅ 2026-10-15 — surveillance (ADR-031, runbook surveillance.md) :
+  - Telegraf 1.40.2 (dépôt InfluxData, clé copiée de dev-linux) sur PROD-01 et pprod-01 →
+    InfluxDB 192.168.1.26:8087, bucket infrastructure ; tokens telegraf-prod-01 /
+    telegraf-pprod-01 (écriture seule ; gestionnaire + /etc/default/telegraf).
+  - Configs versionnées monitoring/telegraf/<serveur>.conf, installées par scripts/telegraf.sh
+    (teste config et règle sudo AVANT de les poser) ; mesures maison scripts/telegraf-etat.sh.
+  - pprod-01 surveille PROD-01 de l'extérieur : PRISM /healthz, wiki, certificat wildcard.
+    NOUVELLE APP = ajouter son URL dans monitoring/telegraf/pprod-01.conf (PLATFORM_STANDARD 5).
+  - Grafana : dossier prod-01, groupe prod-01-1m, 11 règles (export monitoring/grafana/
+    alertes-prod-01.yaml), contact point « Home Assistant — dev-linux » (webhook HA → téléphone).
+    Test réel « PROD-01 — plus de données » réussi (notification reçue).
+  - Pièges : sudo-rs (Ubuntu 26.04) refuse Defaults!…!logfile ; exec Telegraf ≥ 1.39 =
+    commands = [["…"]] ; Flux + group()/max() → finir par keep(columns: ["_time","_value"]).
+  - Reste éventuel : un dashboard Grafana « PROD-01 » (confort, non bloquant).
+- PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
+  données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger.
+- PROCHAINE PHASE (niveau 2) : 10 Sealed Secrets, 12 Tailscale, 13 Landing page.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES
   (voir charts/plateforme/README.md).
 ```

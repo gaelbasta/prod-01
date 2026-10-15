@@ -24,7 +24,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 |---|---|---|---|
 | 9 | GitOps (optionnel) | Argo CD, à reconsidérer : les déploiements sont manuels par Helm (ADR-021) | ⏸️ |
 | 10 | Secrets dans Git | Sealed Secrets (remplace les secrets créés à la main) | ⬜ |
-| 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) | 🟨 |
+| 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) ; 11 règles, test réel réussi ([runbook](docs/runbooks/surveillance.md)) | ✅ 2026-10-15 |
 | 12 | Accès distant | Tailscale sur PROD-01, mêmes URL dedans et dehors | ⬜ |
 | 13 | Landing page | Homepage, avec découverte automatique des apps | ⬜ |
 

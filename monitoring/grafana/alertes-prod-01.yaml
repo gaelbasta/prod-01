@@ -1,0 +1,849 @@
+# =============================================================================
+# Règles d'alerte Grafana du dossier « prod-01 » (ADR-031) — export YAML de Grafana du 2026-10-15.
+# Référence versionnée : les règles vivent dans Grafana (machine Home Assistant, 192.168.1.26) ;
+# après toute modification dans l'interface, refaire l'export (runbook surveillance.md, section D)
+# et remplacer ce fichier. Aucun secret ici : l'adresse du webhook est dans le contact point,
+# pas dans les règles (datasourceUid = identifiant de la source InfluxDB, pas un secret).
+# Correction appliquée le 2026-10-15 : règle « entretien du coffre », seuil > 0 (et non > 5).
+# =============================================================================
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: prod-01-1m
+      folder: prod-01
+      interval: 1m
+      rules:
+        - uid: fg1bjqohv0v0gb
+          title: PROD-01 — plus de données
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "  from(bucket: \"infrastructure\")\r\n    |> range(start: -5m)\r\n    |> filter(fn: (r) => r._measurement == \"system\" and r._field == \"uptime\" and r.host == \"prod-01\")\r\n    |> count()"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: Alerting
+          execErrState: Alerting
+          for: 2m
+          annotations:
+            summary: PROD-01 n'envoie plus de mesures depuis 5 min (éteint, réseau coupé ou Telegraf arrêté)
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: cg1bld7ge8sg0d
+          title: pprod-01 — plus de données
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "  from(bucket: \"infrastructure\")\r\n    |> range(start: -5m)\r\n    |> filter(fn: (r) => r._measurement == \"system\" and r._field == \"uptime\" and r.host == \"pprod-01\")\r\n    |> count()"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: Alerting
+          execErrState: Alerting
+          for: 2m
+          annotations:
+            summary: pprod-01 (coffre de sauvegarde) n’envoie plus de mesures depuis 5 min.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: fg1blkcayvjswd
+          title: PROD-01 — sauvegarde en échec
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -10m)\r\n  |> filter(fn: (r) => r._measurement == \"sauvegarde\" and r._field == \"echec\" and r.host == \"prod-01\")\r\n  |> last()"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Error
+          for: 1m
+          annotations:
+            summary: La dernière sauvegarde de PROD-01 a échoué — voir journalctl -u sauvegarde-prod-01.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: dg1bszktreo00a
+          title: PROD-01 — sauvegarde trop ancienne
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -10m)\r\n  |> filter(fn: (r) => r._measurement == \"sauvegarde\" and r._field == \"age_reussite_s\" and r.host == \"prod-01\")\r\n  |> last()\r\n  |> map(fn: (r) => ({r with _value: if r._value < 0 then 999999 else r._value}))"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 93600
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 5m
+          annotations:
+            summary: Aucune sauvegarde réussie de PROD-01 depuis plus de 26 h.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: bg1bt7tradu68e
+          title: pprod-01 — entretien du coffre
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -10m)\r\n  |> filter(fn: (r) => r._measurement == \"entretien\" and r.host == \"pprod-01\" and (r._field == \"echec\" or r._field == \"age_reussite_s\"))\r\n  |> last()\r\n  |> map(fn: (r) => ({r with _value: if r._field == \"echec\" then r._value else if r._value < 0 or r._value > 691200 then 1 else 0}))\r\n  |> group()\r\n  |> max()\r\n  |> keep(columns: [\"_time\", \"_value\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 5m
+          annotations:
+            summary: Entretien du coffre (tri/contrôle restic) en échec ou absent depuis plus de 8 jours — voir journalctl -u entretien-sauvegardes sur pprod-01.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: dg1btaz5rfmrkd
+          title: pprod-01 — coffre indisponible
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r._measurement == \"coffre\" and r.host == \"pprod-01\" and (r._field == \"disque_monte\" or r._field == \"rest_server_actif\"))\r\n  |> last()\r\n  |> group()\r\n  |> min()\r\n    |> keep(columns: [\"_time\", \"_value\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 2m
+          annotations:
+            summary: 'Coffre de sauvegarde indisponible : disque démonté ou rest-server arrêté sur pprod-01.'
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: dg1btidm9i60wa
+          title: Santé SMART des disques
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -30m)\r\n  |> filter(fn: (r) => r._measurement == \"smart_device\" and r._field == \"health_ok\" and (r.host == \"prod-01\" or r.host == \"pprod-01\"))\r\n  |> last()\r\n  |> map(fn: (r) => ({r with _value: if r._value then 0 else 1}))\r\n  |> group()\r\n  |> max()\r\n  |> keep(columns: [\"_time\", \"_value\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          annotations:
+            summary: Un disque (NVMe PROD-01, SSD ou IronWolf pprod-01) signale un problème SMART.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: ag1btkukotszkd
+          title: Disque presque plein
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r._measurement == \"disk\" and r._field == \"used_percent\" and (r.host == \"prod-01\" or r.host == \"pprod-01\"))\r\n  |> last()\r\n  |> group()\r\n  |> max()\r\n  |> keep(columns: [\"_time\", \"_value\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 85
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 10m
+          annotations:
+            summary: Un volume de PROD-01 ou pprod-01 est rempli à plus de 85 %.
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: fg1btsgwmdkowb
+          title: App de PROD-01 injoignable
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r._measurement == \"http_response\" and r.host == \"pprod-01\" and (r._field == \"result_code\" or r._field == \"http_response_code\"))\r\n  |> last()\r\n  |> map(fn: (r) => ({r with _value: if r._field == \"result_code\" then (if r._value != 0 then 1 else 0) else (if r._value != 200 then 1 else 0)}))\r\n  |> group(columns: [\"server\"])\r\n  |> max()\r\n  |> keep(columns: [\"_time\", \"_value\", \"server\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 3m
+          annotations:
+            summary: '{{ $labels.server }} ne répond plus correctement (vu depuis pprod-01)'
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: fg1btye7l8c1se
+          title: Certificat *.prod bientôt expiré
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -2h)\r\n  |> filter(fn: (r) => r._measurement == \"x509_cert\" and r._field == \"expiry\" and r.type == \"leaf\" and r.host == \"pprod-01\")\r\n  |> last()"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1.2096e+06
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          annotations:
+            summary: 'Le certificat *.prod.gba-lab.win expire dans moins de 14 jours : renouvellement bloqué (cert-manager) ?'
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux
+        - uid: eg1bu13lhpvcwf
+          title: Redémarrage requis
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: ffy1kruauqtxcb
+              model:
+                datasource:
+                    type: influxdb
+                    uid: ffy1kruauqtxcb
+                intervalMs: 1000
+                maxDataPoints: 43200
+                query: "from(bucket: \"infrastructure\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r._measurement == \"etat_systeme\" and r._field == \"reboot_requis\" and (r.host == \"prod-01\" or r.host == \"pprod-01\"))\r\n  |> last()\r\n  |> group()\r\n  |> max()\r\n  |> keep(columns: [\"_time\", \"_value\"])"
+                refId: A
+            - refId: B
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params: []
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: []
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                reducer: last
+                refId: B
+                type: reduce
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: B
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 1h
+          annotations:
+            summary: PROD-01 ou pprod-01 attend un redémarrage (mise à jour du noyau) — à planifier (ADR-018).
+          isPaused: false
+          notification_settings:
+            receiver: Home Assistant — dev-linux

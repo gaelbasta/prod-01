@@ -36,7 +36,8 @@ Dès le cadrage (étape ajoutée à `PROJECT_BOOTSTRAP.md`) :
 2. **Données** : quoi, où, taille estimée, comment les sauvegarder (dump SQLite, etc.).
 3. **Accès** : LAN seul / famille via Tailscale / public.
 4. **Un dossier `docs/`** en Markdown, publié dans le wiki (une ligne dans `projets.txt` du repo wiki ; ordre du menu via des fichiers `.nav.yml` facultatifs — runbook [wiki.md](runbooks/wiki.md), ADR-024).
-5. **Une route de santé** (`/healthz` ou équivalent) pour les profils app, surveillée par Home Assistant.
+5. **Une route de santé** (`/healthz` ou équivalent) pour les profils app, **surveillée depuis `pprod-01`** : ajouter son adresse à `urls` dans `monitoring/telegraf/pprod-01.conf` puis rejouer `telegraf.sh` sur `pprod-01` — l'alerte « App de PROD-01 injoignable » la prend en compte toute seule ([runbook surveillance](runbooks/surveillance.md), section D ; ADR-031).
+6. **Si l'app a des données** : une commande de **copie cohérente** (comme `sauvegarder.ts` de PRISM, contrat ADR-027) et son appel ajouté à l'étape 1 de `scripts/sauvegarde-prod-01.sh` ; les bases vivantes exclues de restic ([runbook sauvegarde](runbooks/sauvegarde-et-restauration.md)).
 
 ## Déploiement : Helm (ADR-021, ADR-023)
 

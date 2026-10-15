@@ -301,7 +301,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Constaté le 2026-10-14 : `restic forget` lancé depuis PROD-01 est bien refusé par rest-server (`403 Forbidden`, instantané conservé) — mais restic rend **code 0** malgré l'échec : ne jamais se fier au seul code de `forget`.
 
 ## ADR-031 — Surveillance : Telegraf → InfluxDB → Grafana (existant), alertes vers Home Assistant
-- **Date** : 2026-10-15 · **Statut** : Acceptée (mise en œuvre en phase 11) · **Précise** : ADR-013
+- **Date** : 2026-10-15 · **Statut** : Acceptée (appliquée le 2026-10-15 : Telegraf sur les 2 serveurs, 11 alertes, test « plus de données » réussi) · **Précise** : ADR-013
 - **Contexte** : l'ADR-013 prévoyait une surveillance « par Home Assistant ». L'existant constaté le 2026-10-15 est en réalité : **Telegraf** sur dev-linux et le PC Windows → **InfluxDB 2.8** (`192.168.1.26:8087`, bucket `infrastructure`) → **Grafana** (source `influxdb2.8.0-infrastructure`, langage Flux) dont les **alertes** partent par **webhook vers Home Assistant**, qui notifie le téléphone. Seules 2 règles existent (stockage de dev-linux), aucune alerte « plus de données ». L'audit et l'optimisation de Home Assistant feront l'objet d'un **projet dédié**, hors de ce repo.
 - **Décision** :
   1. **Même outillage que dev-linux** pour PROD-01 et `pprod-01` : Telegraf du dépôt InfluxData (clé `/usr/share/keyrings/influxdata-archive.gpg` **copiée depuis dev-linux**), intervalle 15 s, bucket `infrastructure`. Configuration complète versionnée par machine : `monitoring/telegraf/<machine>.conf`, installée par `scripts/telegraf.sh`.

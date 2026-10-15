@@ -64,6 +64,7 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | Accès | LAN uniquement (en 4G : injoignable, voulu) ; extérieur via Tailscale en phase 12 |
 | Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, **1.0.0 avec les vraies données** depuis le 2026-10-14) |
 | Sauvegardes | chaque nuit à 3 h vers `pprod-01` (restic, append-only), entretien le dimanche à 5 h — [runbook](docs/runbooks/sauvegarde-et-restauration.md) |
+| Surveillance | Telegraf (PROD-01, `pprod-01`) → InfluxDB → Grafana, 11 alertes vers le téléphone via Home Assistant — [runbook](docs/runbooks/surveillance.md) |
 | Images privées | secret `ghcr-pull` dans le namespace du projet (token `k3s-prod-01-pull`, ADR-024) |
 | Tests de fumée | sans Helm : `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win · avec le chart : `tests/values-smoke-prod.yaml` → https://smoke.prod.gba-lab.win |
 
@@ -77,5 +78,5 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
 | `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
 | `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029), `telegraf.sh` + `telegraf-etat.sh` (ADR-031) |
-| `monitoring/` | configuration Telegraf de chaque serveur (ADR-031) |
+| `monitoring/` | configuration Telegraf de chaque serveur, export des alertes Grafana (ADR-031) |
 | `tests/` | tests de fumée (manifeste brut, valeurs du chart pour k3d et prod) |
