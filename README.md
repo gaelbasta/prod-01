@@ -7,7 +7,7 @@
 
 ## En une phrase
 
-PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kubernetes léger (K3s) qui héberge mes projets (PRISM en premier), accessibles en HTTPS sur le LAN, et plus tard depuis l'extérieur via Tailscale.
+PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kubernetes léger (K3s) qui héberge mes projets (PRISM en premier), accessibles en HTTPS sur le LAN, et depuis l'extérieur via Tailscale (mêmes adresses).
 
 ## Où trouver quoi
 
@@ -43,7 +43,7 @@ PROD-01 est un mini-PC GMKtec K8 Plus sous Ubuntu Server. Il fait tourner un Kub
 
 | Machine | IP | MAC | Remarque |
 |---|---|---|---|
-| PROD-01 | 192.168.1.16 | C8:FF:BF:0B:32:95 | port RJ45 **gauche** (`enp3s0`) ; nom affiché « prod-1 » dans la Livebox |
+| PROD-01 | 192.168.1.16 | C8:FF:BF:0B:32:95 | port RJ45 **gauche** (`enp3s0`) ; nom affiché « prod-1 » dans la Livebox ; Tailscale `100.110.247.64` |
 | dev-linux | 192.168.1.19 | 38:7C:76:4F:B0:DA | |
 | Home Assistant | 192.168.1.26 | 20:F8:3B:03:E0:97 | |
 | PC Windows | 192.168.1.31 | 00:D8:61:17:BC:FB | |
@@ -61,7 +61,7 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | Certificats | cert-manager, guichets `letsencrypt-staging` / `letsencrypt-prod`, wildcard `kube-system/wildcard-prod-tls` renouvelé automatiquement |
 | Postes | PC Windows (contexte unique `prod-01`) · dev-linux (défaut `k3d-dev-local`, PROD-01 **toujours** en `--context prod-01`) |
 | Déployer une app | `helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait` ([runbook](docs/runbooks/deployer-une-app.md)) |
-| Accès | LAN uniquement (en 4G : injoignable, voulu) ; extérieur via Tailscale en phase 12 |
+| Accès | LAN, et **de l'extérieur via Tailscale** avec les mêmes adresses (PROD-01 annonce `192.168.1.16/32`, ADR-033) — sans Tailscale, injoignable en 4G (voulu) — [runbook](docs/runbooks/acces-distant-tailscale.md). Administration (SSH, `kubectl`) : LAN uniquement |
 | Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, **1.0.0 avec les vraies données** depuis le 2026-10-14) |
 | Sauvegardes | chaque nuit à 3 h vers `pprod-01` (restic, append-only), entretien le dimanche à 5 h — [runbook](docs/runbooks/sauvegarde-et-restauration.md) |
 | Surveillance | Telegraf (PROD-01, `pprod-01`) → InfluxDB → Grafana, 11 alertes vers le téléphone via Home Assistant — [runbook](docs/runbooks/surveillance.md) |

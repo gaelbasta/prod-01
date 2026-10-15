@@ -18,7 +18,7 @@
 ## 1. Configuration K3s (avant installation)
 
 Fichier versionné : [`k3s/config.yaml`](../../k3s/config.yaml), copié en `/etc/rancher/k3s/config.yaml`.
-`tls-san` = noms acceptés par le certificat de l'API (`prod-01`, `192.168.1.16`, `k3s.prod.gba-lab.win`). **À compléter avec le nom Tailscale en phase 12** (puis redémarrer K3s).
+`tls-san` = noms acceptés par le certificat de l'API (`prod-01`, `192.168.1.16`, `k3s.prod.gba-lab.win`). Pas de nom Tailscale à ajouter : l'API reste réservée au LAN (ADR-033, 2026-10-15).
 
 ## 2. Installation
 

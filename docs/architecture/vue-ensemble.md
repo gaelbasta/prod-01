@@ -9,7 +9,7 @@ Quand tu ouvres `https://prism.prod.<domaine>` sur ton téléphone :
 3. **Traefik**, le portier de K3s, regarde le nom demandé (`prism`) et transmet à la bonne application.
 4. **L'application PRISM** tourne dans un conteneur et lit ses données sur le disque de PROD-01.
 
-Hors de la maison, c'est la même chose, sauf que **Tailscale** crée un tunnel privé entre ton téléphone et la maison avant l'étape 2.
+Hors de la maison, c'est la même chose, sauf que **Tailscale** crée un tunnel privé entre ton téléphone et PROD-01 avant l'étape 2 : PROD-01 annonce sur Tailscale « `192.168.1.16`, c'est moi », donc la même adresse fonctionne partout (ADR-033).
 
 ```
  Téléphone / PC

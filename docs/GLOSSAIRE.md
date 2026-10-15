@@ -51,6 +51,8 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **Secret** | Objet Kubernetes qui contient une donnée sensible (token, mot de passe). Jamais dans Git **en clair** ; depuis la phase 10, il est produit par un `SealedSecret` (sa version chiffrée, elle, est dans Git). | Un coffre dont la combinaison voyage sous enveloppe scellée. |
 | **SSH par clé** | Connexion à distance sans mot de passe, avec une paire de clés. | Une clé physique plutôt qu'un code à 4 chiffres. |
 | **Tag Git** | Marque-page posé sur un commit (ex. `plateforme-0.1.0`) pour retrouver exactement le code d'une version publiée. | Un signet dans un livre. |
-| **Tailscale** | Un réseau privé chiffré entre mes appareils, où qu'ils soient. | Un couloir secret entre ta poche et la maison. |
+| **Tailscale** | Un réseau privé chiffré entre mes appareils, où qu'ils soient (ADR-033, [runbook](runbooks/acces-distant-tailscale.md)). | Un couloir secret entre ta poche et la maison. |
+| **Tailnet** | Mon réseau Tailscale : les machines connectées avec mon compte (`tail91cc22.ts.net`). Chacune a une adresse `100.x.y.z`. | Le club privé dont seuls mes appareils ont la carte. |
+| **Route annoncée (subnet route)** | Une machine du tailnet dit « je sais joindre telle adresse » ; une fois **approuvée** dans la console, les autres appareils l'utilisent. PROD-01 annonce `192.168.1.16/32` (lui seul), HA annonce `192.168.1.0/24` (tout le LAN). La plus précise gagne. | Un panneau « pour aller chez Gael, passez par ici ». |
 | **TLSStore** | Objet Traefik qui définit le certificat présenté par défaut. Le nôtre (`kube-system/default`) pointe vers le wildcard. | Le badge que le portier montre à tous les visiteurs. |
 | **Traefik** | Le point d'entrée HTTP(S) du cluster. | Le portier qui oriente les visiteurs. |

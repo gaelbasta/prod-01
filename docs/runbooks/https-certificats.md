@@ -169,7 +169,7 @@ Retour arrière : `kubectl --context prod-01 -n kube-system delete helmchartconf
 
 ## Accès hors de la maison
 
-En 4G, `https://*.prod.gba-lab.win` **échoue** : le DNS répond `192.168.1.16`, IP privée injoignable hors du LAN. C'est voulu (ADR-009) et c'est la preuve que rien n'est exposé. Accès extérieur : Tailscale, phase 12 (ADR-010). Constaté le 2026-10-10.
+En 4G **sans Tailscale**, `https://*.prod.gba-lab.win` **échoue** : le DNS répond `192.168.1.16`, IP privée injoignable hors du LAN. C'est voulu (ADR-009) et c'est la preuve que rien n'est exposé. **Avec Tailscale**, la même adresse fonctionne, avec le même certificat (ADR-033, [runbook](acces-distant-tailscale.md)).
 
 ---
 

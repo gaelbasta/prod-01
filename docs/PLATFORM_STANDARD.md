@@ -25,7 +25,7 @@
 | Image | `ghcr.io/gaelbasta/<projet>:<version>` | `ghcr.io/gaelbasta/prism:1.0.0` |
 | Version | jamais `latest` en prod | `1.0.0` |
 | Données | toujours dans un volume, jamais dans l'image | — |
-| Accès | LAN par défaut ; accès Tailscale ou public = ADR | — |
+| Accès | LAN + mes appareils via Tailscale, automatiquement pour toute app (ADR-033) ; famille via Tailscale = règles d'accès à écrire ; public = ADR | — |
 | HTTPS | automatique : certificat wildcard servi par défaut (ADR-022), **aucun certificat à gérer par projet** | — |
 
 ## Ce que chaque projet doit fournir

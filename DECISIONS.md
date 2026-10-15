@@ -64,7 +64,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Test anti-rebinding (2026-10-10)** : ✅ la Livebox **ne bloque pas**. `nslookup test.prod.gba-lab.win` répond `192.168.1.16` via la Livebox comme via `1.1.1.1`. Aucun serveur DNS local nécessaire.
 
 ## ADR-010 — Accès hors LAN via Tailscale
-- **Date** : 2026-10-09 · **Statut** : Acceptée
+- **Date** : 2026-10-09 · **Statut** : Acceptée — appliquée le 2026-10-15, **précisée par ADR-033** (PRISM accessible via Tailscale)
 - **Décision** : Tailscale sur PROD-01. Accès réservé aux appareils de la famille. Aucun port ouvert sur la Livebox.
 - **Conséquences** : une exposition publique éventuelle (Tailscale Funnel, Cloudflare Tunnel) fera l'objet d'un ADR dédié, au cas par cas. PRISM reste réservé au LAN.
 
@@ -342,6 +342,26 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - L'ADR-021 (« aucun secret dans un fichier de valeurs ») reste vraie : les fichiers de valeurs ne font que **nommer** les secrets (`secretEnv`, `imagePullSecrets`).
   - Le chart plateforme 0.1.0 dit encore « secrets créés à la main » dans ses commentaires : à corriger dans la 0.2.0.
   - Mode opératoire : [runbook secrets.md](docs/runbooks/secrets.md).
+
+## ADR-033 — Accès distant : PROD-01 annonce sa seule adresse sur Tailscale ; PRISM compris
+- **Date** : 2026-10-15 · **Statut** : Acceptée (appliquée le 2026-10-15, test réel en 4G réussi) · **Précise** : ADR-010 (et remplace sa phrase « PRISM reste réservé au LAN »)
+- **Contexte** : tailnet existant (compte Google de Gael, 1 utilisateur) avec Home Assistant et le téléphone. Constaté le 2026-10-15 : **HA annonce déjà tout le LAN** (`192.168.1.0/24` + 2 plages IPv6, routes approuvées) ; le wiki s'ouvrait donc déjà en 4G, **en passant par HA**. Règle d'accès par défaut (tout vers tout), MagicDNS activé sans DNS imposé. Tailscale stable : 1.104.1 (dépôt officiel, Ubuntu 26.04 « resolute » proposé).
+- **Décision** :
+  1. **Tailscale installé sur PROD-01** depuis le dépôt officiel `pkgs.tailscale.com` (paquet signé, comme Telegraf — ADR-031), machine `prod-01`, **expiration de clé désactivée**.
+  2. **PROD-01 annonce sa seule adresse** : `--advertise-routes=192.168.1.16/32` (route approuvée dans la console). Mêmes adresses partout : le DNS public (`*.prod.gba-lab.win → 192.168.1.16`, ADR-009) ne change pas, ni les certificats, ni les apps.
+  3. **PROD-01 ne prend rien du tailnet** : `--accept-dns=false` (le DNS du serveur et des pods K3s reste celui de la Livebox) et `--accept-routes=false` (il ignore le `/24` de HA, sinon son trafic local partirait dans le tunnel).
+  4. **Toutes les apps de PROD-01 sont joignables via Tailscale, PRISM compris** (choix de Gael) — PRISM reste protégé par son mot de passe (conservé tel quel, choix du 2026-10-15).
+  5. **Pas d'administration depuis l'extérieur** (choix de Gael) : le pare-feu de PROD-01 n'est pas modifié (22 et 6443 depuis le LAN seulement ; 80/443 étaient déjà ouverts). Le `tls-san` K3s n'a donc pas besoin du nom Tailscale.
+  6. Pas de serveur DNS ni de nom MagicDNS pour les apps : inutile, l'adresse privée publiée dans le DNS public suffit.
+- **Pourquoi** :
+  - *Une route propre à PROD-01 plutôt que le seul `/24` de HA* : PROD-01 ne dépend plus de HA (redémarrage, mise à jour, panne) ; le chemin est direct (constaté : `active; direct`) ; et la route `/32` permettra de donner à la famille **uniquement** les apps de PROD-01, sans le reste du LAN. Les deux routes cohabitent : la plus précise (`/32`) gagne pour `192.168.1.16`.
+  - *Alternatives écartées* : opérateur Tailscale dans Kubernetes (une brique de plus pour un seul nœud) ; noms MagicDNS ou DNS « split » pour les apps (deux jeux d'adresses à retenir, contraire à « mêmes URL dedans et dehors ») ; Tailscale Funnel / Cloudflare Tunnel (exposition publique, hors sujet — ADR-010).
+- **Validation (2026-10-15)** : téléphone en 4G, Tailscale activé : PRISM (connexion comprise) et wiki affichés ; `tcpdump` sur `tailscale0` montre le téléphone (`100.118.137.26`) arriver sur `192.168.1.16:443` ; `tailscale status` : `active; direct` (IPv6). Côté LAN : routes, DNS, K3s, SSH et `kubectl` inchangés.
+- **Conséquences** :
+  - **Limite connue** : avec la règle d'accès par défaut, tout appareil du tailnet joint aussi le LAN entier via HA, **y compris le SSH de PROD-01** (le trafic relayé par HA y arrive avec l'adresse LAN de HA). Acceptable avec un seul utilisateur (SSH par clé, ADR-017). **Avant d'ajouter Estelle et Anna** : règles d'accès restreignant la famille à `192.168.1.16` ports 80/443 (et décider : comptes invités ou appareils sous le compte de Gael). Le réglage des routes de HA relève du projet HA.
+  - Mises à jour de Tailscale manuelles (`apt upgrade`), dépôt non couvert par `unattended-upgrades`.
+  - Avertissements au `tailscale up` sans effet ici (IPv6 forwarding désactivé, UDP GRO).
+  - Mode opératoire : [runbook acces-distant-tailscale.md](docs/runbooks/acces-distant-tailscale.md).
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

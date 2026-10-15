@@ -62,7 +62,7 @@ et proposer un nouvel ADR.
     chart plateforme, profil static. Pas de mise à jour automatique.
   - Images privées : token k3s-prod-01-pull (read:packages, sans expiration),
     secret ghcr-pull par namespace. docker login ghcr.io fait sur dev-linux.
-  - Accès en 4G impossible : voulu (IP privée) → Tailscale en phase 12.
+  - Accès en 4G impossible sans Tailscale : voulu (IP privée) → résolu en phase 12 (ADR-033).
 - Phase 7 ✅ 2026-10-14 — sauvegardes (ADR-026 à ADR-030, runbook sauvegarde-et-restauration.md) :
   - pprod-01 (Beelink N100, 192.168.1.51) = COFFRE : disque Seagate IronWolf 4 To n° WW6AR4CY
     (boîtier USB CENMATE, puce ASMedia) monté /srv/sauvegardes (UUID d5c73bd1-…, nofail,
@@ -128,13 +128,24 @@ et proposer un nouvel ADR.
     cloudflare-api-token, wiki/ghcr-pull, prism/ghcr-pull, prism/prism-secrets}.yaml, tous SYNCED True.
   - Règle : changer un secret = refaire l'enveloppe (kubeseal --cert), commit, kubectl apply.
     ⚠️ Supprimer un SealedSecret supprime le Secret. PRISM ne relit son mot de passe qu'au redémarrage.
-  - Points ouverts : rallonger le mot de passe PRISM (10 caractères) AVANT Tailscale (phase 12) — premier
-    vrai usage de secrets.md C (rotation, pas encore pratiquée) ; docs/ du repo PRISM et du repo wiki
+  - Points ouverts : mot de passe PRISM (10 caractères) CONSERVÉ — choix de Gael le 15/10 ;
+    secrets.md C (changer une valeur) pas encore pratiquée ; docs/ du repo PRISM et du repo wiki
     décrivent encore la création des secrets à la main → à mettre à jour ; chart plateforme 0.2.0 :
     commentaires « secrets créés à la main » à corriger.
+- Phase 12 ✅ 2026-10-15 — Tailscale (ADR-033, runbook acces-distant-tailscale.md) :
+  - Tailnet tail91cc22.ts.net (compte Google, 1 utilisateur) : homeassistant (annonce déjà 192.168.1.0/24
+    + IPv6, exit node), prod-01 (100.110.247.64), téléphone redmi-note-12-pro-5g (100.118.137.26).
+  - PROD-01 : Tailscale 1.104.1 (dépôt pkgs.tailscale.com, MAJ manuelles) ; `tailscale up --hostname=prod-01
+    --advertise-routes=192.168.1.16/32 --accept-dns=false --accept-routes=false` ; route approuvée,
+    expiration désactivée. Mêmes URL dedans/dehors, PRISM compris. Pare-feu inchangé (admin = LAN seul).
+  - Test 4G réussi (tcpdump sur tailscale0, `active; direct`). Piège : valider le lien de connexion en
+    moins de 2 min, sinon « http 410 » → Ctrl+C et relancer.
+  - AVANT d'ajouter Estelle/Anna : règles d'accès (famille → 192.168.1.16:80/443 seulement). Aujourd'hui,
+    via le /24 de HA, le SSH de PROD-01 est joignable depuis le tailnet (OK tant que seul utilisateur).
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
-  données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger.
-- PROCHAINE PHASE (niveau 2) : 12 Tailscale (après le changement du mot de passe PRISM), 13 Landing page.
+  données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger, Tailscale de HA à mettre à jour (1.96.4) et
+  ses routes (/24 + exit node) à revoir avant l'arrivée de la famille sur le tailnet.
+- PROCHAINE PHASE (niveau 2) : 13 Landing page (Homepage). Puis niveau 3 (14 PPROD…).
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

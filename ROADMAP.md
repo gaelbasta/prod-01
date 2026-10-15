@@ -25,7 +25,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | 9 | GitOps (optionnel) | Argo CD, à reconsidérer : les déploiements sont manuels par Helm (ADR-021) | ⏸️ |
 | 10 | Secrets dans Git | Sealed Secrets 0.40.0 (ADR-032) : une seule clé, sauvegardée dans le gestionnaire de mots de passe, **restauration testée** ; les 4 secrets créés à la main migrés sans coupure dans `secrets/prod-01/` ([runbook](docs/runbooks/secrets.md)) | ✅ 2026-10-15 |
 | 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) ; 11 règles, test réel réussi ([runbook](docs/runbooks/surveillance.md)) | ✅ 2026-10-15 |
-| 12 | Accès distant | Tailscale sur PROD-01, mêmes URL dedans et dehors | ⬜ |
+| 12 | Accès distant | Tailscale 1.104.1 sur PROD-01, qui annonce sa seule adresse (`192.168.1.16/32`) : mêmes URL dedans et dehors, PRISM compris (ADR-033) ; test réel en 4G réussi, connexion directe ([runbook](docs/runbooks/acces-distant-tailscale.md)). Famille : plus tard, avec des règles d'accès | ✅ 2026-10-15 |
 | 13 | Landing page | Homepage, avec découverte automatique des apps | ⬜ |
 
 ## Niveau 3 — La robustesse

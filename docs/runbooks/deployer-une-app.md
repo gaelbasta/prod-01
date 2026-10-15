@@ -21,7 +21,7 @@
 
 ## Accès
 
-`https://<projet>.prod.gba-lab.win` fonctionne **uniquement sur le LAN** (Wi-Fi / câble de la maison). En 4G, la connexion échoue : c'est voulu, le nom pointe vers l'IP privée `192.168.1.16` (ADR-009). Accès extérieur = Tailscale, phase 12 (ADR-010). Constaté le 2026-10-10.
+`https://<projet>.prod.gba-lab.win` fonctionne sur le LAN **et**, avec Tailscale activé, de l'extérieur — même adresse, rien à faire par app (ADR-033, [runbook](acces-distant-tailscale.md)). Sans Tailscale, en 4G, la connexion échoue : c'est voulu, le nom pointe vers l'IP privée `192.168.1.16` (ADR-009).
 
 ---
 
@@ -186,5 +186,5 @@ Règle (ADR-023) : **une version publiée n'est jamais republiée.** Toute modif
 | Constat | Cause | Correction |
 |---|---|---|
 | 1 requête sur 300 en erreur (502/504) pendant chaque mise à jour, sur k3d | l'ancien pod s'arrêtait avant que Traefik l'ait retiré de sa liste | `lifecycle.preStop.sleep` 5 s (natif Kubernetes, fonctionne même sans shell dans l'image) → 300/300, deux fois sur k3d, une fois sur prod-01 |
-| Site injoignable en 4G | IP privée, par conception (ADR-009) | aucune — Tailscale en phase 12 |
+| Site injoignable en 4G | IP privée, par conception (ADR-009) | activer Tailscale sur l'appareil ([acces-distant-tailscale.md](acces-distant-tailscale.md)) |
 | (wiki, prod-01) `Readiness probe failed … connection refused` juste après le démarrage | sonde passée avant que nginx écoute (pas de délai initial pour la sonde de disponibilité) | aucune : sans effet (pod `1/1`, 0 redémarrage) ; délai initial à envisager dans une future version du chart |
