@@ -24,7 +24,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 |---|---|---|---|
 | 9 | GitOps (optionnel) | Argo CD, à reconsidérer : les déploiements sont manuels par Helm (ADR-021) | ⏸️ |
 | 10 | Secrets dans Git | Sealed Secrets (remplace les secrets créés à la main) | ⬜ |
-| 11 | Monitoring | Capteurs et alertes dans Home Assistant, dont l'alerte « pas de données » | ⬜ |
+| 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) | 🟨 |
 | 12 | Accès distant | Tailscale sur PROD-01, mêmes URL dedans et dehors | ⬜ |
 | 13 | Landing page | Homepage, avec découverte automatique des apps | ⬜ |
 

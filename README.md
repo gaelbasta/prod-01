@@ -76,5 +76,6 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | `k3s/` | configuration K3s versionnée |
 | `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
 | `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
-| `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029) |
+| `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029), `telegraf.sh` + `telegraf-etat.sh` (ADR-031) |
+| `monitoring/` | configuration Telegraf de chaque serveur (ADR-031) |
 | `tests/` | tests de fumée (manifeste brut, valeurs du chart pour k3d et prod) |

@@ -93,7 +93,8 @@ installer() {
 
   journal "==> Copie du script dans ${CIBLE}"
   install -m 750 -o root -g root "$0" "$CIBLE"
-  install -d -m 700 "$ETAT" "${ETAT}/k3s"
+  install -d -m 711 "$ETAT"            # 711 : Telegraf lit les traces par leur nom, sans lister le dossier (ADR-031)
+  install -d -m 700 "${ETAT}/k3s"      # la copie de la base K3s reste réservée à root
 
   journal "==> Service et timer systemd (timer NON activé)"
   cat > /etc/systemd/system/sauvegarde-prod-01.service <<EOF

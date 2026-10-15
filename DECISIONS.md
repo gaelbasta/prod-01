@@ -89,6 +89,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Décision** : HA surveille PROD-01 depuis l'extérieur : ping, check HTTP de chaque app, métriques de l'hôte. Alerte prioritaire : **absence de données**.
 - **Pourquoi** : HA existe déjà et est une machine distincte de PROD-01.
 
+> Mise en œuvre précisée par **ADR-031** (2026-10-15) : Telegraf → InfluxDB → Grafana (déjà en place sur la machine HA), alertes Grafana notifiées via Home Assistant.
+
 ## ADR-014 — Le N100 devient la PPROD
 - **Date** : 2026-10-09 · **Statut** : Acceptée
 - **Décision** : le N100 est réinstallé (ISO propre) après PROD-01 et devient la PPROD.
@@ -297,6 +299,21 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Conséquences** :
   - Si le volume grossit beaucoup (vraies données, autres apps), passer à un contrôle partiel (`--read-data-subset`) en semaine et complet une fois par mois.
   - Constaté le 2026-10-14 : `restic forget` lancé depuis PROD-01 est bien refusé par rest-server (`403 Forbidden`, instantané conservé) — mais restic rend **code 0** malgré l'échec : ne jamais se fier au seul code de `forget`.
+
+## ADR-031 — Surveillance : Telegraf → InfluxDB → Grafana (existant), alertes vers Home Assistant
+- **Date** : 2026-10-15 · **Statut** : Acceptée (mise en œuvre en phase 11) · **Précise** : ADR-013
+- **Contexte** : l'ADR-013 prévoyait une surveillance « par Home Assistant ». L'existant constaté le 2026-10-15 est en réalité : **Telegraf** sur dev-linux et le PC Windows → **InfluxDB 2.8** (`192.168.1.26:8087`, bucket `infrastructure`) → **Grafana** (source `influxdb2.8.0-infrastructure`, langage Flux) dont les **alertes** partent par **webhook vers Home Assistant**, qui notifie le téléphone. Seules 2 règles existent (stockage de dev-linux), aucune alerte « plus de données ». L'audit et l'optimisation de Home Assistant feront l'objet d'un **projet dédié**, hors de ce repo.
+- **Décision** :
+  1. **Même outillage que dev-linux** pour PROD-01 et `pprod-01` : Telegraf du dépôt InfluxData (clé `/usr/share/keyrings/influxdata-archive.gpg` **copiée depuis dev-linux**), intervalle 15 s, bucket `infrastructure`. Configuration complète versionnée par machine : `monitoring/telegraf/<machine>.conf`, installée par `scripts/telegraf.sh`.
+  2. **Un token InfluxDB par serveur**, en **écriture seule** sur `infrastructure` (`telegraf-prod-01`, `telegraf-pprod-01`) ; valeur dans le gestionnaire de mots de passe et dans `/etc/default/telegraf` (root, 600), lue par systemd (`EnvironmentFile`) ; la configuration n'y fait que référence (`${INFLUX_TOKEN}`).
+  3. **Mesures propres à la prod**, en plus de la base de dev-linux (CPU, mémoire, système, disques, E/S, réseau, températures) :
+     - santé SMART (`inputs.smart`, via `sudo smartctl` autorisé par `/etc/sudoers.d/telegraf-smart`, lecture seule) : NVMe de PROD-01, SSD et IronWolf de `pprod-01` (noms `/dev/disk/by-id`, `-d sat`, sans réveiller un disque en veille) ;
+     - `scripts/telegraf-etat.sh` (→ `/usr/local/bin/telegraf-etat`, `inputs.exec`, sans droits root) : redémarrage requis, âge de la dernière sauvegarde réussie (PROD-01) et du dernier entretien (`pprod-01`), disque du coffre monté, rest-server actif ;
+     - **depuis `pprod-01`, PROD-01 vu de l'extérieur** : réponse HTTP de PRISM (`/healthz`) et du wiki, échéance du certificat wildcard.
+  4. **Alertes Grafana** dans un dossier `prod-01`, envoyées par le **même webhook Home Assistant** que dev-linux (aucun changement côté HA). Priorité : **« plus de données »** de chaque serveur (ADR-013), puis sauvegarde > 26 h, entretien > 8 j, disque presque plein, SMART dégradé, app injoignable, certificat < 14 j, redémarrage requis.
+  5. Le dossier des traces de sauvegarde de PROD-01 passe en **711** : Telegraf lit `derniere-reussite` / `derniere-tentative` par leur nom sans pouvoir lister le dossier ; la copie de la base K3s (`k3s/`, 700) reste réservée à root.
+- **Pourquoi** : réutiliser ce qui marche déjà (une seule façon de faire, aucune modification de HA) ; un token par machine se révoque seul et, en écriture seule, ne permet ni de lire ni d'effacer les mesures ; surveiller PROD-01 depuis une autre machine détecte aussi sa panne complète.
+- **Conséquences** : Telegraf (dépôt InfluxData) n'est pas mis à jour par `unattended-upgrades` (origines Ubuntu seulement) : mise à jour manuelle, comme sur dev-linux. Changer le boîtier ou la baie de l'IronWolf = mettre à jour son nom `by-id` dans `pprod-01.conf`. Pour dev-linux (pas d'alerte « plus de données ») et l'adresse du webhook (secrète, jamais dans Git) : projet HA.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
