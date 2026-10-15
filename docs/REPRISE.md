@@ -93,15 +93,15 @@ et proposer un nouvel ADR.
     node src/serveur/sauvegarder.ts` (code 0) ; jamais prism.sqlite/-wal/-shm.
 - Mises à jour (analysé le 2026-10-14) : unattended-upgrades fonctionne (libx11 installé le
   13/10) ; les 11 correctifs de sécurité vus le 14/10 sont arrivés après le passage de 6 h 06 →
-  installation prévue le 15/10 à 6 h 06 À VÉRIFIER :
-  `ssh -t prod-01 'sudo grep -A3 "2026-10-15 06:0" /var/log/unattended-upgrades/unattended-upgrades.log'`.
+  ✅ installés le 15/10 à 6 h 07 (« All upgrades installed », pas de redémarrage requis).
+  Avertissement sans gravité « distro-info-data outdated » (corrigé par le prochain apt upgrade manuel).
   Les paquets de resolute-updates (tzdata, open-vm-tools…) ne s'installent jamais seuls (voulu,
   ADR-018) → `sudo apt upgrade` manuel ~1×/mois, à ajouter au runbook socle-os. open-vm-tools
   inutile sur machine physique (à désinstaller un jour). 2 mises à jour de firmware (fwupdmgr)
   et « 4 not upgraded » sur pprod-01 : à regarder.
-- À vérifier le 15/10 : 1re sauvegarde automatique de 3 h
-  (`ssh -t prod-01 'cat /var/lib/sauvegarde-prod-01/derniere-tentative'` → « … ok »).
-- Wiki à reconstruire pour publier le runbook sauvegarde-et-restauration (runbook wiki.md, B).
+- ✅ 15/10 : 1re sauvegarde automatique de 3 h réussie (instantané 8f9308e8). Contrôle :
+  `ssh -t prod-01 'sudo cat /var/lib/sauvegarde-prod-01/derniere-tentative'` (sudo obligatoire).
+- Wiki reconstruit le 14/10 après le push de la phase 8.
 - PROCHAINE PHASE (niveau 2) : 10 Sealed Secrets, 11 Monitoring Home Assistant (dont l'âge de
   derniere-reussite / dernier-entretien-reussi), 12 Tailscale, 13 Landing page.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES

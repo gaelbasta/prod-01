@@ -88,7 +88,7 @@ Rejouer `installer` après une modification du script : il **garde** les secrets
 
 **Depuis dev-linux** (`gael@dev-linux`) :
 ```bash
-ssh -t prod-01  'cat /var/lib/sauvegarde-prod-01/derniere-tentative /var/lib/sauvegarde-prod-01/derniere-reussite; systemctl list-timers sauvegarde-prod-01.timer --no-pager'
+ssh -t prod-01  'sudo cat /var/lib/sauvegarde-prod-01/derniere-tentative /var/lib/sauvegarde-prod-01/derniere-reussite; systemctl list-timers sauvegarde-prod-01.timer --no-pager'
 ssh -t pprod-01 'cat /var/lib/entretien-sauvegardes/derniere-tentative; findmnt /srv/sauvegardes; systemctl is-active rest-server; df -h /srv/sauvegardes'
 ssh -t prod-01  'sudo sauvegarde-prod-01 restic snapshots'
 ```
@@ -99,6 +99,8 @@ ssh -t prod-01  'sudo sauvegarde-prod-01 restic snapshots'
 | `derniere-reussite` | moins de 26 h (surveillé par Home Assistant en phase 11) |
 | Coffre | `/srv/sauvegardes` monté, `active`, place disponible |
 | `derniere-tentative` (`pprod-01`) | `<date> ok` du dernier dimanche (`journalctl -u entretien-sauvegardes`) |
+
+`/var/lib/sauvegarde-prod-01` est réservé à root (700 : il contient la copie de la base K3s) → `sudo cat` obligatoire. Première sauvegarde automatique : 2026-10-15 à 3 h 00 (`8f9308e8`, 2,9 Mo stockés, 2 s) ✅.
 
 Journaux : `journalctl -u sauvegarde-prod-01 -n 50` (PROD-01) · `journalctl -u rest-server -n 50` et `journalctl -u entretien-sauvegardes -n 50` (`pprod-01`).
 
