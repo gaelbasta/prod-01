@@ -49,14 +49,21 @@ fi
 chown root:root "$ENV"; chmod 600 "$ENV"
 
 echo "==> smartctl autorisé à Telegraf via sudo (lecture SMART uniquement)"
-cat > /etc/sudoers.d/telegraf-smart <<'EOF'
+# Écrit dans un fichier temporaire, VÉRIFIÉ, puis seulement mis en place : un fichier sudoers
+# invalide dans /etc/sudoers.d peut bloquer sudo. Syntaxe compatible sudo-rs (Ubuntu 26.04) :
+# pas de « Defaults! » (sudo-rs refuse logfile/syslog/pam_session).
+TMP_SUDO="$(mktemp)"
+cat > "$TMP_SUDO" <<'EOF'
 # Géré par prod-01/scripts/telegraf.sh — ADR-031 : Telegraf lit la santé des disques
 Cmnd_Alias TELEGRAF_SMART = /usr/sbin/smartctl, /usr/sbin/nvme
 telegraf ALL=(root) NOPASSWD: TELEGRAF_SMART
-Defaults!TELEGRAF_SMART !logfile, !syslog, !pam_session
 EOF
-chmod 440 /etc/sudoers.d/telegraf-smart
-visudo -cf /etc/sudoers.d/telegraf-smart
+if visudo -cf "$TMP_SUDO"; then
+  install -m 440 -o root -g root "$TMP_SUDO" /etc/sudoers.d/telegraf-smart
+  rm -f "$TMP_SUDO"
+else
+  rm -f "$TMP_SUDO"; echo "ERREUR : règle sudo invalide, NON installée (sudo intact)."; exit 1
+fi
 
 echo "==> Script d'état et configuration"
 install -m 755 "${ICI}/telegraf-etat.sh" /usr/local/bin/telegraf-etat
