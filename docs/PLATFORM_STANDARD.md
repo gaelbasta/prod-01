@@ -56,7 +56,7 @@ helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --vers
 ```
 Revenir en arrière : `helm rollback <projet> -n <projet> --kube-context prod-01`.
 
-Règles : fichier de valeurs **commité** avant tout déploiement ; **aucun secret** dedans ; contexte **toujours explicite** ; version du chart **toujours explicite**.
+Règles : fichier de valeurs **commité** avant tout déploiement ; **aucun secret** dedans (il ne fait que nommer les secrets, eux-mêmes scellés dans `prod-01/secrets/prod-01/<projet>/` — ADR-032, [runbook secrets](runbooks/secrets.md)) ; contexte **toujours explicite** ; version du chart **toujours explicite**.
 Procédure complète : [runbooks/deployer-une-app.md](runbooks/deployer-une-app.md). Valeurs disponibles : [README du chart](../charts/plateforme/README.md).
 
 Fourni automatiquement par la plateforme : HTTPS valide, redirection `http://` → `https://`, mises à jour sans coupure, relance si l'app plante, volume de données conservé après désinstallation.

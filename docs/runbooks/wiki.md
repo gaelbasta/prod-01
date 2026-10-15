@@ -29,7 +29,7 @@ projets.txt ──► scripts/construire.sh ──► image ghcr.io/gaelbasta/wi
    docker login ghcr.io -u gaelbasta          # coller le token (rien ne s'affiche) → Login Succeeded
    ```
    Le token est mémorisé **non chiffré** dans `~/.docker/config.json` (avertissement normal) : fichier sensible, jamais copié.
-3. **Accès du cluster aux images privées** (premier usage réel de l'étape B.2 de [deployer-une-app.md](deployer-une-app.md)) — token classic **`k3s-prod-01-pull`**, scope `read:packages` seul, **sans expiration**, rangé dans le gestionnaire de mots de passe :
+3. *(Historique — depuis le 2026-10-15, ce secret est scellé : `secrets/prod-01/wiki/ghcr-pull.yaml` du repo prod-01, ADR-032.)* **Accès du cluster aux images privées** (premier usage réel de l'étape B.2 de [deployer-une-app.md](deployer-une-app.md)) — token classic **`k3s-prod-01-pull`**, scope `read:packages` seul, **sans expiration**, rangé dans le gestionnaire de mots de passe :
    ```bash
    kubectl --context prod-01 create namespace wiki
    read -rs GH_TOKEN && echo "token chargé (${#GH_TOKEN} caractères)"     # 40 caractères
@@ -89,8 +89,8 @@ Puis navigateur du PC et du téléphone **en Wi-Fi** : cadenas valide, menu, rec
 |---|---|
 | La nouvelle version du wiki pose problème | `helm rollback wiki -n wiki --kube-context prod-01 --wait`, puis remettre l'ancien tag dans `deploy/values-prod.yaml` (`git revert` du commit de déploiement) |
 | Retirer le wiki | `helm uninstall wiki -n wiki --kube-context prod-01` (aucune donnée à perdre : tout est dans l'image et dans Git) |
-| Tout supprimer | en plus : `kubectl --context prod-01 delete namespace wiki` (supprime aussi le secret `ghcr-pull`, à recréer : A.3) |
-| Token `k3s-prod-01-pull` compromis | le révoquer sur GitHub, en créer un nouveau, puis dans **chaque** namespace qui a un `ghcr-pull` : `kubectl … delete secret ghcr-pull` et le recréer (A.3) |
+| Tout supprimer | en plus : `kubectl --context prod-01 delete namespace wiki` (supprime aussi `ghcr-pull` ; pour le reposer : `kubectl --context prod-01 create namespace wiki` puis `kubectl --context prod-01 apply -f secrets/prod-01/wiki/ghcr-pull.yaml` dans le repo prod-01) |
+| Token `k3s-prod-01-pull` compromis | le révoquer sur GitHub, en créer un nouveau, puis refaire l'enveloppe `ghcr-pull` de **chaque** namespace (`wiki`, `prism`…) : [secrets.md](secrets.md), C |
 
 ## E. Ajouter un projet au wiki, régler le menu
 

@@ -72,6 +72,8 @@ helm list -n cert-manager --kube-context prod-01            # deployed, cert-man
 
 ## 3. Ranger le token dans un secret Kubernetes
 
+> **Depuis le 2026-10-15 (phase 10, ADR-032)** : ce secret est **scellé dans Git** — `secrets/prod-01/cert-manager/cloudflare-api-token.yaml`. Pour le (re)créer : `kubectl --context prod-01 apply -f secrets/prod-01/cert-manager/cloudflare-api-token.yaml` (le contrôleur Sealed Secrets doit être installé). Pour **changer de token** : [secrets.md](secrets.md), C. La méthode à la main ci-dessous est conservée comme historique (et comme secours si Sealed Secrets était indisponible).
+
 Emplacement (ADR-008) : **`cert-manager/cloudflare-api-token`, clé `api-token`**.
 ```bash
 read -rs CF_TOKEN && echo "token chargé (${#CF_TOKEN} caractères)"
@@ -83,8 +85,7 @@ unset CF_TOKEN
 
 **Vérifier** (sans afficher la valeur) : `kubectl --context prod-01 -n cert-manager describe secret cloudflare-api-token` → `api-token: 53 bytes` (= nombre de caractères annoncé).
 
-**Changer de token** (rotation, token révoqué) : créer le nouveau token dans Cloudflare, puis
-`kubectl --context prod-01 -n cert-manager delete secret cloudflare-api-token` et refaire cette étape.
+**Changer de token** (rotation, token révoqué) : créer le nouveau token dans Cloudflare, le ranger dans le gestionnaire, puis refaire l'enveloppe ([secrets.md](secrets.md), C). ⚠️ Ne plus faire `delete secret` : le secret appartient au `SealedSecret`, qui le recréerait avec l'ancienne valeur.
 
 ## 4. Guichets Let's Encrypt (ClusterIssuer)
 
@@ -181,9 +182,9 @@ En 4G, `https://*.prod.gba-lab.win` **échoue** : le DNS répond `192.168.1.16`,
 | Problème avec le certificat de production | remettre `letsencrypt-staging` dans `wildcard-prod.yaml` (`git revert`), réappliquer. **Ne pas relancer en boucle** en production (quotas) |
 | Supprimer le certificat | `kubectl --context prod-01 delete -f platform/cert-manager/wildcard-prod.yaml` puis `kubectl --context prod-01 -n kube-system delete secret wildcard-prod-tls` |
 | Désinstaller cert-manager | `helm uninstall cert-manager -n cert-manager --kube-context prod-01` puis `kubectl --context prod-01 delete namespace cert-manager`. Les CRD restent (`crds.keep`) ; réinstaller = même commande qu'à l'étape 2, Helm reprend les CRD sans erreur. **Testé en réel le 2026-10-10** (désinstallation par erreur, réinstallation OK en 2 min) |
-| Token compromis | le révoquer dans Cloudflare (API Tokens → `…` → Delete), en créer un nouveau, refaire l'étape 3 |
+| Token compromis | le révoquer dans Cloudflare (API Tokens → `…` → Delete), en créer un nouveau, refaire l'enveloppe ([secrets.md](secrets.md), C) |
 
 ## Reconstruire de zéro (PROD-01 réinstallé, ou PPROD)
 
-1. Étape 2 (Helm) → 2. étape 3 (secret, token depuis le gestionnaire de mots de passe) → 3. `kubectl apply -f` de `cluster-issuers.yaml`, `wildcard-prod.yaml`, `tlsstore-default.yaml`, `helmchartconfig.yaml` (vérifier le `grep` de l'étape 8).
+1. Étape 2 (Helm) → 2. secret : Sealed Secrets d'abord ([secrets.md](secrets.md), E : clé, contrôleur), puis `kubectl --context prod-01 apply -f secrets/prod-01/cert-manager/` → 3. `kubectl apply -f` de `cluster-issuers.yaml`, `wildcard-prod.yaml`, `tlsstore-default.yaml`, `helmchartconfig.yaml` (vérifier le `grep` de l'étape 8).
 Pour la PPROD : adapter le nom (`*.pprod.gba-lab.win`, `wildcard-pprod`) et utiliser un token dédié.

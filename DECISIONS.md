@@ -48,7 +48,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
 - **Conséquences** : le cluster utilise un token GitHub en lecture seule. Jamais de données dans une image.
 
 ## ADR-008 — Gestion des secrets
-- **Date** : 2026-10-09 · **Statut** : Proposée
+- **Date** : 2026-10-09 · **Statut** : Acceptée — niveau 1 appliqué (phases 5 à 8), **niveau 2 appliqué le 2026-10-15** : voir **ADR-032**
 - **Décision** : niveau 1 : secrets créés à la main avec kubectl, leur emplacement documenté (pas leur valeur). Niveau 2 : Sealed Secrets (secrets chiffrés stockables dans Git).
 - **Conséquences** : la clé de Sealed Secrets devra être sauvegardée, sinon les secrets deviennent illisibles.
 
@@ -314,6 +314,34 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   5. Le dossier des traces de sauvegarde de PROD-01 passe en **711** : Telegraf lit `derniere-reussite` / `derniere-tentative` par leur nom sans pouvoir lister le dossier ; la copie de la base K3s (`k3s/`, 700) reste réservée à root.
 - **Pourquoi** : réutiliser ce qui marche déjà (une seule façon de faire, aucune modification de HA) ; un token par machine se révoque seul et, en écriture seule, ne permet ni de lire ni d'effacer les mesures ; surveiller PROD-01 depuis une autre machine détecte aussi sa panne complète.
 - **Conséquences** : Telegraf (dépôt InfluxData) n'est pas mis à jour par `unattended-upgrades` (origines Ubuntu seulement) : mise à jour manuelle, comme sur dev-linux. Changer le boîtier ou la baie de l'IronWolf = mettre à jour son nom `by-id` dans `pprod-01.conf`. Pour dev-linux (pas d'alerte « plus de données ») et l'adresse du webhook (secrète, jamais dans Git) : projet HA.
+
+## ADR-032 — Secrets dans Git : Sealed Secrets, une seule clé, enveloppes rangées dans ce repo
+- **Date** : 2026-10-15 · **Statut** : Acceptée (appliquée le 2026-10-15 : contrôleur installé, clé sauvegardée et restauration testée, 4 secrets migrés sans coupure) · **Précise** : ADR-008, ADR-021
+- **Contexte** : 4 secrets avaient été créés à la main (`cert-manager/cloudflare-api-token`, `wiki/ghcr-pull`, `prism/ghcr-pull`, `prism/prism-secrets`) : leur valeur n'était nulle part dans Git, et reconstruire PROD-01 demandait de retaper chaque commande. Versions au 2026-10-15 : contrôleur **0.40.0** (10/09/2026, correctif de sécurité), chart Helm **2.20.0**. Le projet a déménagé de `bitnami-labs` vers `bitnami` sur GitHub.
+- **Décision** :
+  1. **Contrôleur Sealed Secrets** installé par son chart Helm officiel (catalogue `https://bitnami.github.io/sealed-secrets`), dans `kube-system`, nommé `sealed-secrets-controller` (nom cherché par défaut par `kubeseal`). Valeurs : `platform/sealed-secrets/values-prod.yaml` (ADR-021).
+  2. **Une seule clé, sans renouvellement** (`keyrenewperiod: "0"` — choix de Gael, « option A »). Par défaut, le contrôleur crée une nouvelle clé tous les 30 jours et garde les anciennes : il faudrait réexporter chaque nouvelle clé vers le gestionnaire de mots de passe, faute de quoi la copie hors de PROD-01 serait vite périmée.
+  3. **Sauvegarde de la clé privée** (`kube-system/sealed-secrets-key72g5d`) à deux endroits : la base K3s (sauvegardée chaque nuit par restic, ADR-029) **et** le gestionnaire de mots de passe (« Sealed Secrets – clé prod-01 », fichier en pièce jointe + empreintes). C'est la règle de l'ADR-027 point 4 appliquée à cette clé.
+  4. **Le certificat public** est commité (`platform/sealed-secrets/prod-01-cert.pem`) : on scelle avec `kubeseal --cert`, sans accès au cluster.
+  5. **Toutes les enveloppes de PROD-01 sont rangées dans ce repo**, sous `secrets/prod-01/<namespace>/<nom>.yaml` (y compris celles des apps), et appliquées par `kubectl --context prod-01 apply -f` — **commit avant application**, comme les manifestes de `platform/` (ADR-022 point 5). La PPROD aura sa propre clé et son dossier `secrets/pprod-01/`.
+  6. **Portée stricte** (défaut de Sealed Secrets) : une enveloppe ne s'ouvre que pour son namespace et son nom.
+  7. **Migration d'un secret existant** : on ne le remplace que si l'**empreinte** (`sha256sum`) de la valeur du gestionnaire est identique à celle du secret en service ; le secret est ensuite confié au contrôleur par l'annotation `sealedsecrets.bitnami.com/managed=true`, sans être supprimé.
+  8. `kubeseal` est installé sur **dev-linux** seulement (binaire officiel vérifié par empreinte, même version que le contrôleur).
+- **Pourquoi** :
+  - Les secrets suivent la même règle que tout le reste : **tout est dans Git** ; reconstruire PROD-01 = poser la clé, installer le contrôleur, `kubectl apply -R -f secrets/prod-01/`.
+  - *Point 2* : un seul administrateur, accès LAN uniquement, clé déjà couverte par restic ; le gain de sécurité d'un renouvellement automatique ne compense pas le risque d'une copie de secours périmée. Le renouvellement ne rechiffre de toute façon pas les enveloppes existantes.
+  - *Point 5* : un seul endroit où chercher (Gael l'a souhaité pour ne rien oublier) ; changer le token `k3s-prod-01-pull` touche plusieurs namespaces, donc plusieurs fichiers d'un même repo.
+  - *Point 7* : la méthode « empreinte avant = empreinte après » prouve, sans jamais afficher une valeur, que la migration ne change rien ; constaté sur les 4 secrets, aucun pod redémarré.
+  - *Alternatives écartées* : SOPS + age (chiffrement côté poste, plus souple mais un outil et une clé de plus sur chaque poste, sans contrôleur qui applique) ; External Secrets + gestionnaire de mots de passe (nécessite un coffre accessible par API) ; garder les secrets à la main (pas de reconstruction possible depuis Git).
+- **Validation (2026-10-15)** : test de restauration réussi sur `k3d-dev-local` avec la **copie du gestionnaire** (empreinte identique) : un secret scellé avec le certificat de Git y a été ouvert ; journal `registered private key` (pas de nouvelle clé). Puis k3d nettoyé et copies locales effacées (`shred -u`). Migration des 4 secrets : `SYNCED True`, empreintes inchangées, PRISM `/healthz` 200, certificat wildcard et guichets Let's Encrypt `True`.
+- **Conséquences** :
+  - **Supprimer un `SealedSecret` supprime le Secret qu'il a produit** ; supprimer la CRD `sealedsecrets.bitnami.com` les supprime tous. `helm uninstall` du contrôleur, lui, laisse tout en place.
+  - Changer un secret = refaire l'enveloppe, commit, `apply` ; une variable d'environnement (PRISM) n'est relue qu'au redémarrage du pod.
+  - Le certificat expire le **12/10/2036** : à revoir avant (nouvelle clé = refaire toutes les enveloppes).
+  - Mise à jour du contrôleur : manuelle, par Helm (version dans l'en-tête du fichier de valeurs) ; `kubeseal` mis à la même version.
+  - L'ADR-021 (« aucun secret dans un fichier de valeurs ») reste vraie : les fichiers de valeurs ne font que **nommer** les secrets (`secretEnv`, `imagePullSecrets`).
+  - Le chart plateforme 0.1.0 dit encore « secrets créés à la main » dans ses commentaires : à corriger dans la 0.2.0.
+  - Mode opératoire : [runbook secrets.md](docs/runbooks/secrets.md).
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

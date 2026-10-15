@@ -29,10 +29,13 @@ timer 3 h → sauvegarde-prod-01 lancer                     rest-server :8000 (-
 
 ## Où sont les secrets
 
+> Restaurer PROD-01 de zéro : la base K3s restaurée contient déjà la clé Sealed Secrets ; sinon, la reposer depuis le gestionnaire **avant** d'installer le contrôleur ([secrets.md](secrets.md), E).
+
 | Secret | Gestionnaire de mots de passe | PROD-01 | `pprod-01` |
 |---|---|---|---|
 | Mot de passe **restic** (clé de chiffrement — **perdu = sauvegardes illisibles**) | « restic – dépôt prod-01 » (+ ID du dépôt `362bcd9da7`) | `/etc/restic/motdepasse` (root, 600) | `/etc/restic/prod-01.motdepasse` (root:restic, 640) |
 | Identifiant **rest-server** `prod-01` | « rest-server pprod-01 – prod-01 » | dans `/etc/restic/prod-01.env` (root, 600) | haché bcrypt dans `/etc/rest-server/.htpasswd` (root:restic, 640) |
+| Clé privée **Sealed Secrets** (ouvre les secrets de `secrets/prod-01/` — **perdue = enveloppes illisibles**, ADR-032) | « Sealed Secrets – clé prod-01 » (fichier joint) | secret `kube-system/sealed-secrets-key72g5d`, donc **dans la base K3s** sauvegardée chaque nuit | — |
 
 ---
 

@@ -116,9 +116,25 @@ et proposer un nouvel ADR.
   - Pièges : sudo-rs (Ubuntu 26.04) refuse Defaults!…!logfile ; exec Telegraf ≥ 1.39 =
     commands = [["…"]] ; Flux + group()/max() → finir par keep(columns: ["_time","_value"]).
   - Reste éventuel : un dashboard Grafana « PROD-01 » (confort, non bloquant).
+- Phase 10 ✅ 2026-10-15 — Sealed Secrets (ADR-032, runbook secrets.md, partie « En deux minutes ») :
+  - Contrôleur 0.40.0 (chart 2.20.0, catalogue https://bitnami.github.io/sealed-secrets — l'ancienne
+    adresse bitnami-labs.github.io répond 404) dans kube-system, nommé sealed-secrets-controller ;
+    valeurs platform/sealed-secrets/values-prod.yaml ; renouvellement de clé DÉSACTIVÉ (une seule clé).
+  - Clé privée kube-system/sealed-secrets-key72g5d : dans la base K3s (restic) + gestionnaire
+    « Sealed Secrets – clé prod-01 » (fichier joint, sha256 938cd832…). Restauration TESTÉE sur k3d avec
+    la copie du gestionnaire. Certificat public commité : platform/sealed-secrets/prod-01-cert.pem
+    (expire le 12/10/2036). kubeseal 0.40.0 sur dev-linux seulement (pas sur le PC Windows).
+  - 4 secrets migrés sans coupure (empreinte avant = après) : secrets/prod-01/{cert-manager/
+    cloudflare-api-token, wiki/ghcr-pull, prism/ghcr-pull, prism/prism-secrets}.yaml, tous SYNCED True.
+  - Règle : changer un secret = refaire l'enveloppe (kubeseal --cert), commit, kubectl apply.
+    ⚠️ Supprimer un SealedSecret supprime le Secret. PRISM ne relit son mot de passe qu'au redémarrage.
+  - Points ouverts : rallonger le mot de passe PRISM (10 caractères) AVANT Tailscale (phase 12) — premier
+    vrai usage de secrets.md C (rotation, pas encore pratiquée) ; docs/ du repo PRISM et du repo wiki
+    décrivent encore la création des secrets à la main → à mettre à jour ; chart plateforme 0.2.0 :
+    commentaires « secrets créés à la main » à corriger.
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
   données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger.
-- PROCHAINE PHASE (niveau 2) : 10 Sealed Secrets, 12 Tailscale, 13 Landing page.
-- Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES
+- PROCHAINE PHASE (niveau 2) : 12 Tailscale (après le changement du mot de passe PRISM), 13 Landing page.
+- Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

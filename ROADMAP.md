@@ -23,7 +23,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | # | Phase | Contenu | Statut |
 |---|---|---|---|
 | 9 | GitOps (optionnel) | Argo CD, à reconsidérer : les déploiements sont manuels par Helm (ADR-021) | ⏸️ |
-| 10 | Secrets dans Git | Sealed Secrets (remplace les secrets créés à la main) | ⬜ |
+| 10 | Secrets dans Git | Sealed Secrets 0.40.0 (ADR-032) : une seule clé, sauvegardée dans le gestionnaire de mots de passe, **restauration testée** ; les 4 secrets créés à la main migrés sans coupure dans `secrets/prod-01/` ([runbook](docs/runbooks/secrets.md)) | ✅ 2026-10-15 |
 | 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) ; 11 règles, test réel réussi ([runbook](docs/runbooks/surveillance.md)) | ✅ 2026-10-15 |
 | 12 | Accès distant | Tailscale sur PROD-01, mêmes URL dedans et dehors | ⬜ |
 | 13 | Landing page | Homepage, avec découverte automatique des apps | ⬜ |

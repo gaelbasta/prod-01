@@ -66,7 +66,7 @@ host: prism.prod.gba-lab.win
 healthPath: /healthz
 env:
   TZ: Europe/Paris
-secretEnv: [prism-secrets]     # secret créé à la main (étape 2)
+secretEnv: [prism-secrets]     # secret scellé dans prod-01/secrets/ (étape 2)
 persistence:
   enabled: true
   size: 5Gi
@@ -75,23 +75,32 @@ Profil `static` : `profile: static`, image nginx + fichiers (base `nginxinc/ngin
 
 **Commit + push du fichier AVANT de déployer** (ADR-021). Contrôle : `git status --short` vide.
 
-### 2. Les secrets (si besoin) — ✅ accès image privée (`ghcr-pull`, wiki, 2026-10-10) · ✅ variables secrètes (`prism-secrets`, PRISM, 2026-10-11)
+### 2. Les secrets (si besoin) — ✅ scellés dans Git depuis la phase 10 (2026-10-15, ADR-032)
 
-Créés à la main, jamais dans Git (ADR-008) ; documenter leur **emplacement** dans le `docs/` du projet.
+Les secrets d'une app sont des **SealedSecrets** rangés dans le repo **prod-01** (pas dans le repo du projet) : `secrets/prod-01/<projet>/<nom>.yaml`. Valeur d'abord dans le gestionnaire de mots de passe, puis (sur **dev-linux**, dans `~/claude-projects/prod-01`) :
 ```bash
-kubectl --context prod-01 create namespace prism
+mkdir -p secrets/prod-01/<projet>
 # Accès à une image privée GHCR : token classic « k3s-prod-01-pull » (read:packages, sans expiration,
-# le même pour tous les namespaces — ADR-024), conservé dans le gestionnaire de mots de passe :
+# le même pour tous les namespaces — ADR-024), une enveloppe PAR namespace :
 read -rs GH_TOKEN
-kubectl --context prod-01 -n prism create secret docker-registry ghcr-pull \
-  --docker-server=ghcr.io --docker-username=gaelbasta --docker-password="$GH_TOKEN"
+kubectl create secret docker-registry ghcr-pull -n <projet> \
+  --docker-server=ghcr.io --docker-username=gaelbasta --docker-password="$GH_TOKEN" --dry-run=client -o yaml \
+| kubeseal --cert platform/sealed-secrets/prod-01-cert.pem --format yaml > secrets/prod-01/<projet>/ghcr-pull.yaml
 unset GH_TOKEN
 # Variables secrètes de l'app (une clé = une variable d'environnement) :
-read -rs DB_PASSWORD
-printf '%s' "$DB_PASSWORD" | kubectl --context prod-01 -n prism create secret generic prism-secrets \
-  --from-file=DB_PASSWORD=/dev/stdin
-unset DB_PASSWORD
+read -rs VALEUR
+printf '%s' "$VALEUR" | kubectl create secret generic <projet>-secrets -n <projet> \
+  --from-file=MA_VARIABLE=/dev/stdin --dry-run=client -o yaml \
+| kubeseal --cert platform/sealed-secrets/prod-01-cert.pem --format yaml > secrets/prod-01/<projet>/<projet>-secrets.yaml
+unset VALEUR
+git add secrets/prod-01/<projet>/ && git commit -m "<projet> : secrets scellés" && git push
+kubectl --context prod-01 create namespace <projet>
+kubectl --context prod-01 apply -f secrets/prod-01/<projet>/
+kubectl --context prod-01 -n <projet> get sealedsecret         # SYNCED True
 ```
+Détails, changement de valeur, pièges : [secrets.md](secrets.md) (B et C).
+
+> *Historique* : jusqu'au 2026-10-15, ces secrets étaient créés à la main (`kubectl create secret …` directement dans le cluster) ; ceux du wiki et de PRISM ont été migrés sans coupure ([secrets.md](secrets.md), D).
 
 ### 3. Déployer — ✅ (test `smoke`, 2026-10-10)
 

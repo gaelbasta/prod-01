@@ -15,5 +15,6 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [wiki.md](wiki.md) (construire, publier, mettre à jour le wiki ; ajouter un projet) | 6 | ✅ |
 | [installation-pprod-01.md](installation-pprod-01.md) (N100 : BIOS, Ubuntu Server, socle, clés SSH) | 7 | ✅ |
 | [sauvegarde-et-restauration.md](sauvegarde-et-restauration.md) (disque, coffre, sauvegarde nocturne, entretien, restaurer, garde-fous) | 7 | ✅ |
+| [secrets.md](secrets.md) (Sealed Secrets : principe en deux minutes, créer / changer / migrer un secret, restaurer la clé) | 10 | ✅ |
 | [surveillance.md](surveillance.md) (Telegraf, InfluxDB, alertes Grafana, que faire quand une alerte sonne) | 11 | ✅ |
 | redemarrer-prod-01.md | — | ⬜ |

@@ -1,6 +1,7 @@
 # Guichets Let's Encrypt pour PROD-01 (ADR-022)
 # Appliquer : kubectl --context prod-01 apply -f platform/cert-manager/cluster-issuers.yaml
-# Secret requis (créé à la main, ADR-008) : cert-manager/cloudflare-api-token, clé api-token
+# Secret requis : cert-manager/cloudflare-api-token, clé api-token — scellé dans
+#   secrets/prod-01/cert-manager/cloudflare-api-token.yaml (Sealed Secrets, ADR-032)
 #   = token Cloudflare « cert-manager-prod-01 » (Zone.DNS:Edit + Zone.Zone:Read sur gba-lab.win)
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer

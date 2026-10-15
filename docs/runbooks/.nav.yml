@@ -11,6 +11,7 @@ nav:
   - wiki.md
   - installation-pprod-01.md
   - sauvegarde-et-restauration.md
+  - secrets.md
   - surveillance.md
   - glob: "*"         # tout nouveau runbook apparaît ensuite, sans rien oublier
     ignore_no_matches: true

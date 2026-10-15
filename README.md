@@ -65,7 +65,8 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, **1.0.0 avec les vraies données** depuis le 2026-10-14) |
 | Sauvegardes | chaque nuit à 3 h vers `pprod-01` (restic, append-only), entretien le dimanche à 5 h — [runbook](docs/runbooks/sauvegarde-et-restauration.md) |
 | Surveillance | Telegraf (PROD-01, `pprod-01`) → InfluxDB → Grafana, 11 alertes vers le téléphone via Home Assistant — [runbook](docs/runbooks/surveillance.md) |
-| Images privées | secret `ghcr-pull` dans le namespace du projet (token `k3s-prod-01-pull`, ADR-024) |
+| Secrets | **chiffrés dans Git** (Sealed Secrets, ADR-032) : `secrets/prod-01/<namespace>/<nom>.yaml`, appliqués par `kubectl --context prod-01 apply -f` ; clé dans le gestionnaire de mots de passe — [runbook](docs/runbooks/secrets.md) |
+| Images privées | secret `ghcr-pull` dans le namespace du projet (token `k3s-prod-01-pull`, ADR-024), scellé dans `secrets/prod-01/<namespace>/ghcr-pull.yaml` |
 | Tests de fumée | sans Helm : `kubectl --context prod-01 apply -f tests/smoke-whoami.yaml` → https://test.prod.gba-lab.win · avec le chart : `tests/values-smoke-prod.yaml` → https://smoke.prod.gba-lab.win |
 
 ## Arborescence du repo
@@ -76,7 +77,8 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | `.nav.yml` (racine, `docs/`, `docs/runbooks/`) | ordre du menu de ce repo dans le wiki (ADR-024) |
 | `k3s/` | configuration K3s versionnée |
 | `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
-| `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik…) |
+| `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik, Sealed Secrets…) |
+| `secrets/` | secrets **chiffrés** (SealedSecret), un dossier par serveur puis par namespace : `secrets/prod-01/<namespace>/<nom>.yaml` (ADR-032) |
 | `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029), `telegraf.sh` + `telegraf-etat.sh` (ADR-031) |
 | `monitoring/` | configuration Telegraf de chaque serveur, export des alertes Grafana (ADR-031) |
 | `tests/` | tests de fumée (manifeste brut, valeurs du chart pour k3d et prod) |
