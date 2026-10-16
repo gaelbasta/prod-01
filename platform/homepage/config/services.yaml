@@ -1,0 +1,23 @@
+# Liens écrits à la main (les apps de PROD-01, elles, apparaissent toutes seules).
+# Adresses IP plutôt que homeassistant.local : elles marchent aussi hors de la maison via Tailscale (ADR-033).
+- Infra:
+    - Grafana:
+        href: http://192.168.1.26:8123/a0d7b954_grafana
+        description: Surveillance et alertes
+        icon: grafana.png
+    - Home Assistant:
+        href: http://192.168.1.26:8123
+        description: Maison et notifications
+        icon: home-assistant.png
+    - Tailscale:
+        href: https://login.tailscale.com/admin/machines
+        description: Accès distant
+        icon: tailscale.png
+    - GitHub:
+        href: https://github.com/gaelbasta
+        description: Repos
+        icon: github.png
+    - Images GHCR:
+        href: https://github.com/gaelbasta?tab=packages
+        description: Images et chart
+        icon: mdi-package-variant-closed

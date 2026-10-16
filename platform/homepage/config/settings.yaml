@@ -1,0 +1,15 @@
+# Réglages généraux de la page (https://gethomepage.dev/configs/settings/)
+title: PROD-01
+language: fr
+theme: dark
+color: slate
+headerStyle: clean
+hideVersion: true
+statusStyle: dot
+layout:
+  Apps:            # rubrique remplie automatiquement par les apps (bloc « accueil » du chart plateforme)
+    style: row
+    columns: 3
+  Infra:
+    style: row
+    columns: 5

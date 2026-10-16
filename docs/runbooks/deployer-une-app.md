@@ -178,6 +178,7 @@ Règle (ADR-023) : **une version publiée n'est jamais republiée.** Toute modif
 | Version | Date | Contenu | Digest |
 |---|---|---|---|
 | 0.1.0 | 2026-10-10 | profils app/static, HTTPS par défaut, sondes, volume conservé, pause d'arrêt 5 s, schéma | `sha256:8dfa83fc…f6f4078` |
+| 0.2.0 | 2026-10-16 | bloc `accueil` (annotations Homepage, ADR-034), `enableServiceLinks: false`, `kubeContext` dans les NOTES ; testé sur k3d ; compatible 0.1.0 | `sha256:3976452f…28466a6f` |
 
 ---
 

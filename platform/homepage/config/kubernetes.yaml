@@ -1,0 +1,6 @@
+# Homepage lit le cluster de l'intérieur, avec son compte de service (rbac.yaml).
+# Découverte : uniquement les Ingress portant gethomepage.dev/enabled: "true".
+mode: cluster
+ingress: true
+traefik: false
+gateway: false

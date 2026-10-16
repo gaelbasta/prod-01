@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - home.prod.gba-lab.win   # pas de secretName : certificat wildcard par défaut (ADR-022)
+  rules:
+    - host: home.prod.gba-lab.win
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homepage
+                port:
+                  name: http

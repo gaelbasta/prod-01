@@ -1,0 +1,23 @@
+# Bandeau du haut (https://gethomepage.dev/widgets/)
+- kubernetes:            # CPU et mémoire de PROD-01, lus par metrics-server (fourni avec K3s)
+    cluster:
+      show: true
+      cpu: true
+      memory: true
+      showLabel: true
+      label: PROD-01
+    nodes:
+      show: false
+- datetime:
+    locale: fr
+    text_size: xl
+    format:
+      dateStyle: full
+      timeStyle: short
+- openmeteo:
+    label: Gorges
+    latitude: 47.10
+    longitude: -1.30
+    timezone: Europe/Paris
+    units: metric
+    cache: 15

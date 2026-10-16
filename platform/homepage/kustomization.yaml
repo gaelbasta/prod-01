@@ -1,0 +1,26 @@
+# Page d'accueil Homepage sur PROD-01 (phase 13, ADR-034) — https://home.prod.gba-lab.win
+# Pas de chart Helm officiel : manifestes de la doc officielle, assemblés par kustomize (intégré à kubectl).
+#   Voir le résultat : kubectl kustomize platform/homepage
+#   Appliquer        : kubectl --context prod-01 apply -k platform/homepage
+# La configuration (config/*.yaml) devient un ConfigMap dont le nom change à chaque modification :
+# un « apply » après modification redémarre Homepage avec la nouvelle configuration.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: homepage
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+configMapGenerator:
+  - name: homepage
+    files:
+      - config/settings.yaml
+      - config/kubernetes.yaml
+      - config/services.yaml
+      - config/widgets.yaml
+      - config/bookmarks.yaml
+      - config/docker.yaml
+      - config/custom.css
+      - config/custom.js
