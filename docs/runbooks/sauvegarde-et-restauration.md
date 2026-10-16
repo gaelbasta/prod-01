@@ -10,7 +10,7 @@
 PROD-01 (192.168.1.16)                                   pprod-01 (192.168.1.51)
 ───────────────────────                                   ───────────────────────
 timer 3 h → sauvegarde-prod-01 lancer                     rest-server :8000 (--append-only, --private-repos)
-  1. PRISM : copie cohérente (/data/sauvegardes)            ↑ seul 192.168.1.16 autorisé (ufw)
+  1. PRISM, Factorydle : copies cohérentes                  ↑ seul 192.168.1.16 autorisé (ufw)
   2. K3s : sqlite3 .backup + integrity_check                │ identifiant « prod-01 »
   3. restic backup ── chiffré avant l'envoi ── HTTP ────────┘
   4. trace derniere-reussite                               disque IronWolf 4 To → /srv/sauvegardes
@@ -24,7 +24,7 @@ timer 3 h → sauvegarde-prod-01 lancer                     rest-server :8000 (-
 |---|---|
 | `/etc` (dont `/etc/rancher/k3s/config.yaml`, `/etc/rancher/node/password`, `/etc/restic`) | — |
 | `/var/lib/rancher/k3s/server` (`token`, `tls/`, `cred/`, manifests) | `db/state.db*` vivante (remplacée par la copie), `kine.sock` |
-| `/var/lib/rancher/k3s/storage` (volumes des apps) | `prism.sqlite*` vivante (seules les copies de `/data/sauvegardes` sont fiables, ADR-027) |
+| `/var/lib/rancher/k3s/storage` (volumes des apps) | `prism.sqlite*` vivante (seules les copies de `/data/sauvegardes` sont fiables, ADR-027) ; Factorydle : `*.tmp` (fichiers en cours d'écriture) |
 | `/var/lib/sauvegarde-prod-01` (copie de la base K3s, traces) | `/var/lib/rancher/k3s/agent` (images, ~1,6 Go : se retéléchargent) |
 
 ## Où sont les secrets
@@ -168,6 +168,22 @@ Les volumes portent un nom **différent** après recréation (`pvc-<id>_<namespa
 **PRISM** : ne jamais remettre `prism.sqlite` tel quel (il n'est pas sauvegardé) : restaurer le volume, puis remplacer `prism.sqlite` par la copie voulue de `/data/sauvegardes/prism-AAAA-MM-JJ.sqlite` (app arrêtée, sans `-wal`/`-shm`) — procédure à confirmer dans la doc du projet PRISM.
 
 Relevés du test 3 : ancien volume `pvc-ca803ca3-…`, nouveau `pvc-ab15984d-…`, `Restored 8 / 3 files/dirs`, preuve `c06DYyzuPZxlWSUG` identique avant et après.
+
+### C3 bis. Une partie de Factorydle — testé ✅ 2026-10-16 (partie d'essai)
+
+Factorydle garde ses parties en fichiers JSON dans son volume (`/data`). Chaque nuit, `serveur/sauvegarder.ts` en fait une **copie cohérente** dans `/data/nocturne/` (parties, copies du jour, corbeille, `index.json`) : c'est elle qui fait foi. Les fichiers vivants sont aussi sauvegardés (écriture atomique), sauf les `*.tmp`. Procédure complète, y compris remettre une partie en jeu : `docs/exploitation.md` du repo Factorydle.
+
+Test du 2026-10-16 (sur PROD-01, après `sudo sauvegarde-prod-01 lancer` → instantané `580c846d`) :
+```bash
+VOL=/var/lib/rancher/k3s/storage/pvc-646730b2-1d56-4301-90ff-8a78a7fe9733_factorydle_factorydle-data
+sudo sauvegarde-prod-01 restic restore latest --target /tmp/restauration-factorydle --include "$VOL/nocturne"
+sudo diff -r "$VOL/nocturne" "/tmp/restauration-factorydle$VOL/nocturne" && echo "IDENTIQUE à la copie de la nuit"
+sudo sh -c "grep -l 'Essai PROD' /tmp/restauration-factorydle$VOL/nocturne/parties/*"
+sudo rm -rf /tmp/restauration-factorydle
+```
+Résultat : `Restored 14 / 8 files/dirs`, **IDENTIQUE à la copie de la nuit** (qui contenait la partie « Essai PROD »).
+
+> **Piège** : un `*` dans un chemin restauré doit être placé **à l'intérieur** de `sudo sh -c '…'`. Sinon c'est ton shell (utilisateur `gael`) qui essaie de le développer avant `sudo`, n'a pas le droit de lister le dossier (propriété de root), et la commande échoue avec `No such file or directory`.
 
 ### C4. Depuis le coffre, si PROD-01 est perdu
 

@@ -14,7 +14,7 @@ pprod-01 ─ Telegraf (15 s) ─┘   (un par serveur)                │   buck
   système, disques, SMART,                                      │ Grafana : 11 règles « prod-01 »
   coffre, entretien,                                            │   évaluées chaque minute     │
   + PROD-01 vu de l'extérieur                                   │      │ webhook               │
-    (PRISM, wiki, certificat)                                   │      ▼                       │
+    (PRISM, wiki, Factorydle, cert.)                            │      ▼                       │
                                                                 │ automatisation HA → téléphone│
                                                                 └──────────────────────────────┘
 ```
@@ -84,7 +84,7 @@ Les règles sont aussi décrites, exactement, dans l'export versionné `monitori
 | Alerte | Premiers gestes |
 |---|---|
 | **plus de données** | La machine répond-elle ? `ssh <serveur> uptime`. Si oui : `systemctl status telegraf`, `journalctl -u telegraf -n 50` (token refusé = `401`, InfluxDB injoignable = HA éteint). Si non : courant, réseau, écran + clavier. |
-| **sauvegarde en échec** | `ssh -t prod-01 'sudo cat /var/lib/sauvegarde-prod-01/derniere-tentative; sudo journalctl -u sauvegarde-prod-01 -n 80 --no-pager'` → l'étape en cause (`prism`, `k3s`, `restic:<code>`) ; [runbook sauvegarde](sauvegarde-et-restauration.md), section E ; relancer `sudo sauvegarde-prod-01 lancer`. |
+| **sauvegarde en échec** | `ssh -t prod-01 'sudo cat /var/lib/sauvegarde-prod-01/derniere-tentative; sudo journalctl -u sauvegarde-prod-01 -n 80 --no-pager'` → l'étape en cause (`prism`, `factorydle`, `k3s`, `restic:<code>`) ; [runbook sauvegarde](sauvegarde-et-restauration.md), section E ; relancer `sudo sauvegarde-prod-01 lancer`. |
 | **sauvegarde trop ancienne** | Le timer tourne-t-il ? `systemctl list-timers sauvegarde-prod-01.timer` ; puis comme ci-dessus. |
 | **entretien du coffre** | `ssh -t pprod-01 'sudo journalctl -u entretien-sauvegardes -n 80 --no-pager'` ; relancer `sudo systemctl start entretien-sauvegardes`. |
 | **coffre indisponible** | Boîtier allumé ? `ssh -t pprod-01 'findmnt /srv/sauvegardes; systemctl status rest-server'` ; `sudo systemctl start rest-server` (monte le disque tout seul). |

@@ -146,6 +146,13 @@ et proposer un nouvel ADR.
   (PROD-01) » dans ~/.claude/CLAUDE.md → Claude Code lit docs/PLATFORM_STANDARD.md au /cadrer, traite ce repo en
   LECTURE SEULE depuis un autre projet et liste les ajouts à faire ici (secrets, surveillance, sauvegarde) en
   ACTION MANUELLE. PLATFORM_STANDARD : repo GitHub privé requis, point 7 « secrets ».
+- 2026-10-16 — FACTORYDLE hébergé (jeu idle, repo gaelbasta/factorydle, profil app, chart 0.1.0, image 0.16.0,
+  https://factorydle.prod.gba-lab.win, volume factorydle-data pvc-646730b2-…, santé /api/sante, sans mot de
+  passe en V1 — à rouvrir avant d'ajouter la famille au tailnet) : SealedSecret secrets/prod-01/factorydle/
+  ghcr-pull.yaml ; sauvegarde nocturne = `node serveur/sauvegarder.ts` → /data/nocturne (contrat ADR-027),
+  exclusion *.tmp ; restauration d'essai OK (instantané 580c846d) ; santé surveillée depuis pprod-01 ; wiki.
+  Suite côté projet (Claude Code) : chantier 17 « V1 en PROD » = image 1.0.0 + partie officielle créée sur PROD-01.
+  Mise à jour de version : runbook deployer-une-app.md (changer le tag dans deploy/values-prod.yaml du projet).
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
   données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger, Tailscale de HA à mettre à jour (1.96.4) et
   ses routes (/24 + exit node) à revoir avant l'arrivée de la famille sur le tailnet.
