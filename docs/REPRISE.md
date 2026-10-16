@@ -151,7 +151,8 @@ et proposer un nouvel ADR.
   passe en V1 — à rouvrir avant d'ajouter la famille au tailnet) : SealedSecret secrets/prod-01/factorydle/
   ghcr-pull.yaml ; sauvegarde nocturne = `node serveur/sauvegarder.ts` → /data/nocturne (contrat ADR-027),
   exclusion *.tmp ; restauration d'essai OK (instantané 580c846d) ; santé surveillée depuis pprod-01 ; wiki.
-  Suite côté projet (Claude Code) : chantier 17 « V1 en PROD » = image 1.0.0 + partie officielle créée sur PROD-01.
+  V1 en PROD le 2026-10-16 : image 1.0.0 (révision Helm 2), partie officielle créée sur PROD-01. Mises à jour :
+  docs/exploitation.md du projet (copie de la nuit lancée à la main avant chaque helm upgrade, code 0 obligatoire).
   Mise à jour de version : runbook deployer-une-app.md (changer le tag dans deploy/values-prod.yaml du projet).
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
   données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger, Tailscale de HA à mettre à jour (1.96.4) et
