@@ -11,7 +11,7 @@
 #   sudo sauvegarde-prod-01 restic <commande>    # restic avec les réglages du dépôt (ex. : snapshots, ls latest, restore)
 #
 # Ce que fait « lancer » :
-#   1. copie cohérente de chaque app qui en a une (PRISM : contrat ADR-027) ;
+#   1. copie cohérente de chaque app qui en a une (PRISM, Factorydle : contrat ADR-027) ;
 #   2. copie cohérente de la base K3s (sauvegarde en ligne SQLite) + contrôle d'intégrité ;
 #   3. restic backup : /etc, /var/lib/rancher/k3s/server (token, tls… ; base vivante exclue),
 #      /var/lib/rancher/k3s/storage (volumes ; bases vivantes exclues), copies du point 2 ;
@@ -152,6 +152,12 @@ lancer() {
   else
     journal "PRISM : ÉCHEC de la copie cohérente"; echecs+=("prism")
   fi
+  # Factorydle (contrat ADR-027) : code 0 = copie écrite et relue dans /data/nocturne
+  if k3s kubectl -n factorydle exec deploy/factorydle -- node serveur/sauvegarder.ts; then
+    journal "Factorydle : copie OK"
+  else
+    journal "Factorydle : ÉCHEC de la copie cohérente"; echecs+=("factorydle")
+  fi
 
   journal "==> 2. Copie cohérente de la base K3s"
   rm -f "$COPIE_K3S"
@@ -168,6 +174,7 @@ lancer() {
     --exclude "${BASE_K3S}" --exclude "${BASE_K3S}-wal" --exclude "${BASE_K3S}-shm" \
     --exclude "/var/lib/rancher/k3s/server/kine.sock" \
     --exclude "/var/lib/rancher/k3s/storage/*_prism_prism-data/prism.sqlite*" \
+    --exclude "/var/lib/rancher/k3s/storage/*_factorydle_factorydle-data/**/*.tmp" \
     /etc /var/lib/rancher/k3s/server /var/lib/rancher/k3s/storage "$ETAT" \
     || code=$?
   # 0 = OK ; 3 = instantané créé mais des fichiers illisibles ; autre = pas d'instantané
