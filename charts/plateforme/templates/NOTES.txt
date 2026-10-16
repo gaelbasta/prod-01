@@ -1,9 +1,12 @@
 {{ .Release.Name }} déployé (profil {{ .Values.profile }}, image {{ .Values.image.repository }}:{{ .Values.image.tag }}).
 
   Adresse  : {{ if .Values.tls }}https{{ else }}http{{ end }}://{{ .Values.host }}
-  Pods     : kubectl -n {{ .Release.Namespace }} get pods
-  Historique / retour arrière : helm history {{ .Release.Name }} -n {{ .Release.Namespace }}
-                                helm rollback {{ .Release.Name }} -n {{ .Release.Namespace }}
+  Pods     : kubectl --context {{ .Values.kubeContext }} -n {{ .Release.Namespace }} get pods
+  Historique / retour arrière : helm history {{ .Release.Name }} -n {{ .Release.Namespace }} --kube-context {{ .Values.kubeContext }}
+                                helm rollback {{ .Release.Name }} -n {{ .Release.Namespace }} --kube-context {{ .Values.kubeContext }}
+{{- if .Values.accueil.enabled }}
+  Accueil  : visible sur https://home.prod.gba-lab.win (rubrique « {{ .Values.accueil.group | default "Apps" }} »)
+{{- end }}
 {{- if .Values.persistence.enabled }}
   Données  : volume {{ .Release.Name }}-data monté sur {{ .Values.persistence.mountPath }} (conservé après uninstall)
 {{- end }}

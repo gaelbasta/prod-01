@@ -25,6 +25,7 @@ spec:
         - name: {{ . }}
         {{- end }}
       {{- end }}
+      enableServiceLinks: false   # pas de variables <SERVICE>_PORT=tcp://… injectées (piège PRISM_PORT, 2026-10-11)
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

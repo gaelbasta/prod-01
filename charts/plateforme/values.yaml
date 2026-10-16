@@ -10,11 +10,23 @@ image:
   tag: ""                   # OBLIGATOIRE — version figée, jamais « latest » (ex. 1.0.0)
   pullPolicy: IfNotPresent
 
-# Noms de secrets (créés à la main, ADR-008) donnant accès à une image privée GHCR (ADR-007).
+# Noms de secrets donnant accès à une image privée GHCR (ADR-007) — scellés dans prod-01/secrets/ (ADR-032).
 imagePullSecrets: []        # ex. [ghcr-pull]
 
 # Adresse publique de l'app. OBLIGATOIRE — ex. prism.prod.gba-lab.win
 host: ""
+
+# Page d'accueil (Homepage, https://home.prod.gba-lab.win) : l'app y apparaît toute seule si enabled.
+# Le chart ajoute les annotations gethomepage.dev/* à l'Ingress (ADR-034).
+accueil:
+  enabled: false
+  name: ""                  # vide = nom de la release (ex. prism)
+  group: Apps               # rubrique de la page d'accueil
+  icon: ""                  # ex. mdi-finance, si-wikidotjs, ou une adresse d'image
+  description: ""           # une ligne
+
+# Contexte kubectl affiché dans les NOTES après un déploiement (prod-01, k3d-dev-local…).
+kubeContext: prod-01
 
 # HTTPS : ajoute le bloc tls à l'Ingress ; le certificat wildcard par défaut de Traefik est utilisé (ADR-022).
 tls: true
@@ -37,7 +49,7 @@ shutdownDelaySeconds: 5
 # Variables d'environnement NON secrètes.
 env: {}                     # ex. { TZ: Europe/Paris, LOG_LEVEL: info }
 
-# Secrets (créés à la main, ADR-008) dont toutes les clés deviennent des variables d'environnement.
+# Secrets dont toutes les clés deviennent des variables d'environnement — scellés dans prod-01/secrets/ (ADR-032).
 secretEnv: []               # ex. [prism-secrets]
 
 # Volume de données (profil app uniquement). Conservé même après « helm uninstall ».

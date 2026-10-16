@@ -11,3 +11,11 @@ image:
 port: 80
 healthPath: /health
 host: test.localhost
+# Chart 0.2.0 : vérifier les annotations de la page d'accueil et le contexte des NOTES
+kubeContext: k3d-dev-local
+accueil:
+  enabled: true
+  name: Test smoke
+  group: Tests
+  icon: mdi-test-tube
+  description: whoami, test du chart plateforme

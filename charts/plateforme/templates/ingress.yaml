@@ -4,6 +4,18 @@ metadata:
   name: {{ .Release.Name }}
   labels:
     {{- include "plateforme.labels" . | nindent 4 }}
+  {{- if .Values.accueil.enabled }}
+  annotations:               # découverte par la page d'accueil Homepage (ADR-034)
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: {{ .Values.accueil.name | default .Release.Name | quote }}
+    gethomepage.dev/group: {{ .Values.accueil.group | default "Apps" | quote }}
+    {{- with .Values.accueil.icon }}
+    gethomepage.dev/icon: {{ . | quote }}
+    {{- end }}
+    {{- with .Values.accueil.description }}
+    gethomepage.dev/description: {{ . | quote }}
+    {{- end }}
+  {{- end }}
 spec:
   ingressClassName: traefik
   {{- if .Values.tls }}

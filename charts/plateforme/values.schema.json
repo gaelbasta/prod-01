@@ -34,6 +34,18 @@
         "storageClass": { "type": "string" }
       }
     },
+    "accueil": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "name": { "type": "string" },
+        "group": { "type": "string" },
+        "icon": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "kubeContext": { "type": "string" },
     "resources": { "type": "object" },
     "podSecurityContext": { "type": "object" }
   }

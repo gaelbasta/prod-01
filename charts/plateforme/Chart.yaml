@@ -4,4 +4,4 @@ description: Chart commun PROD-01 / PPROD — profils « app » et « static » 
 type: application
 # Version du chart : à augmenter à CHAQUE modification avant publication sur GHCR
 # (0.1.1 = correctif, 0.2.0 = nouvelle option). Une version publiée n'est jamais republiée.
-version: 0.1.0
+version: 0.2.0

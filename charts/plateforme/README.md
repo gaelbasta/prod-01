@@ -39,7 +39,13 @@ Un projet n'écrit **aucun YAML Kubernetes** : seulement un `values-<env>.yaml` 
 | `replicas` | `1` | | forcé à 1 si `persistence` |
 | `shutdownDelaySeconds` | `5` | | pause avant l'arrêt d'un ancien pod (déploiement sans coupure) ; max 25 |
 | `env` | `{}` | | variables **non secrètes** |
-| `secretEnv` | `[]` | | noms de Secrets (créés à la main) injectés en variables |
+| `secretEnv` | `[]` | | noms de Secrets (scellés dans `prod-01/secrets/`, ADR-032) injectés en variables |
+| `accueil.enabled` | `false` | | **0.2.0** — l'app apparaît sur la page d'accueil https://home.prod.gba-lab.win (ADR-034) |
+| `accueil.name` | nom de la release | | titre affiché |
+| `accueil.group` | `Apps` | | rubrique de la page d'accueil |
+| `accueil.icon` | — | | ex. `mdi-finance`, `si-wikidotjs` ([icônes](https://gethomepage.dev/configs/services/#icons)) |
+| `accueil.description` | — | | une ligne sous le titre |
+| `kubeContext` | `prod-01` | | **0.2.0** — contexte affiché dans les NOTES (mettre `k3d-dev-local` pour un test local) |
 | `persistence.enabled` | `false` | | volume de données (profil app) |
 | `persistence.size` | `1Gi` | | |
 | `persistence.mountPath` | `/data` | | |
@@ -59,6 +65,10 @@ image:
   tag: "1.0.0"
 imagePullSecrets: [ghcr-pull]
 host: prism.prod.gba-lab.win
+accueil:
+  enabled: true
+  icon: mdi-finance
+  description: Observatoire financier
 env:
   TZ: Europe/Paris
 secretEnv: [prism-secrets]
@@ -75,11 +85,13 @@ helm template test charts/plateforme -f <valeurs>        # affiche le YAML produ
 ```
 Publication sur GHCR : voir `docs/runbooks/deployer-une-app.md`. **Toute modification = nouvelle `version` dans `Chart.yaml`.**
 
-## Améliorations prévues (prochaine version, 0.2.0)
+## Historique des versions
 
-Relevées au premier vrai déploiement (PRISM, 2026-10-11). Chacune fera l'objet d'un ADR à la publication.
-
-| Constat | Correction envisagée |
+| Version | Contenu |
 |---|---|
-| Kubernetes injecte des variables `<SERVICE>_PORT=tcp://…` pour chaque service du namespace ; une app nommée `prism` qui lit `PRISM_PORT` plante (`ERR_SOCKET_BAD_PORT`). PRISM contourne en fixant `PRISM_PORT` dans `env`. | `enableServiceLinks: false` dans le pod |
-| Les NOTES affichées après `helm install` donnent `kubectl -n <ns> …` sans contexte : sur dev-linux, ces commandes viseraient `k3d-dev-local`. | Ajouter `--context` / `--kube-context` dans les NOTES (valeur `kubeContext` ou texte générique) |
+| 0.1.0 (2026-10-10) | profils app/static, HTTPS par défaut, sondes, volume conservé, pause d'arrêt 5 s, schéma |
+| 0.2.0 (2026-10-16) | bloc `accueil` (annotations Homepage sur l'Ingress, ADR-034) ; `enableServiceLinks: false` (plus de variables `<SERVICE>_PORT=tcp://…` injectées : piège PRISM_PORT du 2026-10-11) ; `kubeContext` dans les NOTES ; commentaires « secrets scellés » (ADR-032). **Compatible** : un fichier de valeurs 0.1.0 marche tel quel en 0.2.0. |
+
+## Améliorations envisagées
+
+- Délai initial pour la sonde de disponibilité (message `Readiness probe failed` sans effet juste après le démarrage du wiki).
