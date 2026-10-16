@@ -1,7 +1,9 @@
 # Standard d'hébergement PROD-01
 
 > Statut : **en service** depuis la phase 5 (chart plateforme 0.1.0, 2026-10-10). Premier vrai projet : wiki (phase 6, profil static, image privée).
-> Référencé par `METHOD.md` et `PROJECT_BOOTSTRAP.md`.
+> Référencé par la **méthode Claude** (repo `claude-method`, V1.2) : `/cadrer` lit ce fichier dès qu'un projet doit être hébergé.
+>
+> **Pour Claude Code travaillant sur un autre projet** : ce repo est en **lecture seule**. Ce qui doit y être ajouté pour le projet (secret scellé, adresse surveillée, appel de sauvegarde — et, dans le repo `wiki`, la ligne de `projets.txt`) est listé pour Gael en ACTION MANUELLE ; aucun `kubectl` / `helm` vers PROD-01 sans sa demande explicite.
 
 ## Règle d'or
 
@@ -22,6 +24,7 @@
 | Namespace | = nom du projet | `prism` |
 | URL prod | `<projet>.prod.gba-lab.win` | `prism.prod.gba-lab.win` |
 | URL pprod | `<projet>.pprod.gba-lab.win` | `prism.pprod.gba-lab.win` |
+| Repo | GitHub **privé** `gaelbasta/<projet>` (nécessaire pour l'image GHCR et le wiki) | `gaelbasta/prism` |
 | Image | `ghcr.io/gaelbasta/<projet>:<version>` | `ghcr.io/gaelbasta/prism:1.0.0` |
 | Version | jamais `latest` en prod | `1.0.0` |
 | Données | toujours dans un volume, jamais dans l'image | — |
@@ -30,7 +33,7 @@
 
 ## Ce que chaque projet doit fournir
 
-Dès le cadrage (étape ajoutée à `PROJECT_BOOTSTRAP.md`) :
+Dès le cadrage (`/cadrer` de la méthode Claude) :
 
 1. **Profil d'hébergement** : static ou app.
 2. **Données** : quoi, où, taille estimée, comment les sauvegarder (dump SQLite, etc.).
@@ -38,6 +41,8 @@ Dès le cadrage (étape ajoutée à `PROJECT_BOOTSTRAP.md`) :
 4. **Un dossier `docs/`** en Markdown, publié dans le wiki (une ligne dans `projets.txt` du repo wiki ; ordre du menu via des fichiers `.nav.yml` facultatifs — runbook [wiki.md](runbooks/wiki.md), ADR-024).
 5. **Une route de santé** (`/healthz` ou équivalent) pour les profils app, **surveillée depuis `pprod-01`** : ajouter son adresse à `urls` dans `monitoring/telegraf/pprod-01.conf` puis rejouer `telegraf.sh` sur `pprod-01` — l'alerte « App de PROD-01 injoignable » la prend en compte toute seule ([runbook surveillance](runbooks/surveillance.md), section D ; ADR-031).
 6. **Si l'app a des données** : une commande de **copie cohérente** (comme `sauvegarder.ts` de PRISM, contrat ADR-027) et son appel ajouté à l'étape 1 de `scripts/sauvegarde-prod-01.sh` ; les bases vivantes exclues de restic ([runbook sauvegarde](runbooks/sauvegarde-et-restauration.md)).
+
+7. **Ses secrets** (tokens, mots de passe, accès à l'image privée `ghcr-pull`) : la **liste** (nom du secret, clés), jamais les valeurs. Ils sont scellés dans **ce** repo, `secrets/prod-01/<projet>/` (ADR-032, [runbook secrets](runbooks/secrets.md), B) ; le projet ne fait que les nommer dans `values-prod.yaml` (`secretEnv`, `imagePullSecrets`).
 
 ## Déploiement : Helm (ADR-021, ADR-023)
 

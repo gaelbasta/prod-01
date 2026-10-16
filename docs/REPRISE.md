@@ -142,6 +142,10 @@ et proposer un nouvel ADR.
     moins de 2 min, sinon « http 410 » → Ctrl+C et relancer.
   - AVANT d'ajouter Estelle/Anna : règles d'accès (famille → 192.168.1.16:80/443 seulement). Aujourd'hui,
     via le /24 de HA, le SSH de PROD-01 est joignable depuis le tailnet (OK tant que seul utilisateur).
+- 2026-10-16 — Méthode Claude V1.2 (repo gaelbasta/claude-method = ~/claude-projects/docs, publié dans le wiki) : bloc « Hébergement
+  (PROD-01) » dans ~/.claude/CLAUDE.md → Claude Code lit docs/PLATFORM_STANDARD.md au /cadrer, traite ce repo en
+  LECTURE SEULE depuis un autre projet et liste les ajouts à faire ici (secrets, surveillance, sauvegarde) en
+  ACTION MANUELLE. PLATFORM_STANDARD : repo GitHub privé requis, point 7 « secrets ».
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
   données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger, Tailscale de HA à mettre à jour (1.96.4) et
   ses routes (/24 + exit node) à revoir avant l'arrivée de la famille sur le tailnet.
