@@ -151,7 +151,7 @@ Les volumes portent un nom **différent** après recréation (`pvc-<id>_<namespa
    ```
 2. **Redéployer l'app si elle n'existe plus** (dev-linux), puis **l'arrêter** pour que personne n'écrive pendant la restauration — indispensable pour une base SQLite (PRISM) :
    ```bash
-   helm upgrade --install <app> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 -n <app> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01
+   helm upgrade --install <app> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 -n <app> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01
    kubectl --context prod-01 -n <app> scale deploy/<app> --replicas=0
    ```
 3. **Restaurer et copier** (PROD-01) :

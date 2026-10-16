@@ -14,7 +14,7 @@ pprod-01 ─ Telegraf (15 s) ─┘   (un par serveur)                │   buck
   système, disques, SMART,                                      │ Grafana : 11 règles « prod-01 »
   coffre, entretien,                                            │   évaluées chaque minute     │
   + PROD-01 vu de l'extérieur                                   │      │ webhook               │
-    (PRISM, wiki, Factorydle, cert.)                            │      ▼                       │
+    (apps, accueil, certificat)                                 │      ▼                       │
                                                                 │ automatisation HA → téléphone│
                                                                 └──────────────────────────────┘
 ```

@@ -1,6 +1,6 @@
 # Test de restauration n°3 (phase 7, ADR-027) : une app du chart plateforme avec un volume de données.
 # nginx sert directement le contenu de son volume → on lit en HTTPS ce qu'on y a écrit, avant et après restauration.
-# Déployer : helm upgrade --install restauration oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+# Déployer : helm upgrade --install restauration oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
 #              -n restauration --create-namespace -f tests/values-restauration-prod.yaml --kube-context prod-01
 #            (sans --wait : le pod n'est « prêt » qu'une fois sante.txt écrit dans le volume)
 # Tester   : https://restauration.prod.gba-lab.win/preuve.txt

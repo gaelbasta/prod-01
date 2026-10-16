@@ -157,18 +157,15 @@ et proposer un nouvel ADR.
 - PROJET DÉDIÉ À CRÉER (hors prod-01) : audit/optimisation de Home Assistant — alerte « plus de
   données » absente pour dev-linux et le PC Windows, contact point à renommer, webhook à protéger, Tailscale de HA à mettre à jour (1.96.4) et
   ses routes (/24 + exit node) à revoir avant l'arrivée de la famille sur le tailnet.
-- Phase 13 🟨 (2026-10-16/17) — page d'accueil Homepage :
-  - Chart plateforme 0.2.0 publié (sha256:3976452f…, tag plateforme-0.2.0) : bloc `accueil` (enabled, name, group,
-    icon, description → annotations gethomepage.dev/* sur l'Ingress), enableServiceLinks: false, kubeContext dans
-    les NOTES. Compatible 0.1.0. Testé sur k3d.
-  - Homepage v2.2.0 : platform/homepage/ (kustomize : kubectl --context prod-01 apply -k platform/homepage),
-    https://home.prod.gba-lab.win ; config/ = réglages, liens Infra (IP 192.168.1.26, pas homeassistant.local),
-    widgets CPU/mémoire (metrics-server), date, météo Gorges. Pièges : au 1er déploiement, créer le namespace avant
-    le --dry-run=server ; au 1er démarrage, settings.yaml ignoré → rollout restart deploy/homepage.
-  - Wiki passé en 0.2.0 avec accueil : visible (point vert).
-  - RESTE : PRISM et Factorydle en 0.2.0 + bloc accueil (via Claude Code dans leur repo, puis helm upgrade par Gael) ;
-    surveillance de home.prod depuis pprod-01 ; ADR-034 ; runbook accueil.md ; mentions « --version 0.1.0 » des docs.
-- PROCHAINE PHASE ensuite : niveau 3 (14 PPROD…).
+- Phase 13 ✅ 2026-10-17 — page d'accueil Homepage (ADR-034, runbook accueil.md) — NIVEAU 2 TERMINÉ (9 GitOps ⏸️) :
+  - Chart plateforme 0.2.0 (sha256:3976452f…, tag plateforme-0.2.0) : bloc `accueil` (annotations gethomepage.dev/*),
+    enableServiceLinks: false, kubeContext dans les NOTES ; compatible 0.1.0. Toute nouvelle app : --version 0.2.0.
+  - Homepage v2.2.0 : platform/homepage/ (kubectl --context prod-01 apply -k platform/homepage),
+    https://home.prod.gba-lab.win ; liens Infra par IP (192.168.1.26), widgets CPU/mémoire, date, météo Gorges ;
+    santé /api/healthcheck surveillée depuis pprod-01. Pièges : namespace avant --dry-run=server ; au 1er démarrage
+    settings.yaml ignoré → rollout restart deploy/homepage.
+  - Wiki, PRISM (1.1.0, révision 4 ; PRISM_PORT retiré du fichier de valeurs) et Factorydle en 0.2.0, affichés.
+- PROCHAINE PHASE : niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

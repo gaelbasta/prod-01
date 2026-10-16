@@ -60,9 +60,10 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | Applications | `https://<app>.prod.gba-lab.win` (Traefik, certificat wildcard Let's Encrypt par défaut — ADR-022) |
 | Certificats | cert-manager, guichets `letsencrypt-staging` / `letsencrypt-prod`, wildcard `kube-system/wildcard-prod-tls` renouvelé automatiquement |
 | Postes | PC Windows (contexte unique `prod-01`) · dev-linux (défaut `k3d-dev-local`, PROD-01 **toujours** en `--context prod-01`) |
-| Déployer une app | `helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait` ([runbook](docs/runbooks/deployer-une-app.md)) |
+| Déployer une app | `helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait` ([runbook](docs/runbooks/deployer-une-app.md)) |
 | Accès | LAN, et **de l'extérieur via Tailscale** avec les mêmes adresses (PROD-01 annonce `192.168.1.16/32`, ADR-033) — sans Tailscale, injoignable en 4G (voulu) — [runbook](docs/runbooks/acces-distant-tailscale.md). Administration (SSH, `kubectl`) : LAN uniquement |
-| Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, **1.0.0 avec les vraies données** depuis le 2026-10-14) · **factorydle** — https://factorydle.prod.gba-lab.win (repo `gaelbasta/factorydle`, jeu, profil app, **V1 1.0.0** en service depuis le 2026-10-16, avec la partie officielle) |
+| Page d'accueil | **https://home.prod.gba-lab.win** (Homepage, ADR-034) : toutes les apps (bloc `accueil` du chart), liens Infra, état du serveur — [runbook](docs/runbooks/accueil.md) |
+| Apps en service | **wiki** — https://wiki.prod.gba-lab.win (repo `gaelbasta/wiki`, ADR-024, ADR-025) · **prism** — https://prism.prod.gba-lab.win (repo PRISM, vraies données depuis le 2026-10-14, **1.1.0** depuis le 2026-10-17) · **factorydle** — https://factorydle.prod.gba-lab.win (repo `gaelbasta/factorydle`, jeu, profil app, **V1 1.0.0** en service depuis le 2026-10-16, avec la partie officielle) |
 | Sauvegardes | chaque nuit à 3 h vers `pprod-01` (restic, append-only), entretien le dimanche à 5 h — [runbook](docs/runbooks/sauvegarde-et-restauration.md) |
 | Surveillance | Telegraf (PROD-01, `pprod-01`) → InfluxDB → Grafana, 11 alertes vers le téléphone via Home Assistant — [runbook](docs/runbooks/surveillance.md) |
 | Secrets | **chiffrés dans Git** (Sealed Secrets, ADR-032) : `secrets/prod-01/<namespace>/<nom>.yaml`, appliqués par `kubectl --context prod-01 apply -f` ; clé dans le gestionnaire de mots de passe — [runbook](docs/runbooks/secrets.md) |
@@ -76,8 +77,8 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | `docs/` | architecture, glossaire, standard d'hébergement, runbooks |
 | `.nav.yml` (racine, `docs/`, `docs/runbooks/`) | ordre du menu de ce repo dans le wiki (ADR-024) |
 | `k3s/` | configuration K3s versionnée |
-| `charts/` | chart Helm **plateforme** (profils app/static), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` |
-| `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik, Sealed Secrets…) |
+| `charts/` | chart Helm **plateforme** (profils app/static, page d'accueil), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` (0.2.0) |
+| `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik, Sealed Secrets, Homepage…) |
 | `secrets/` | secrets **chiffrés** (SealedSecret), un dossier par serveur puis par namespace : `secrets/prod-01/<namespace>/<nom>.yaml` (ADR-032) |
 | `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029), `telegraf.sh` + `telegraf-etat.sh` (ADR-031) |
 | `monitoring/` | configuration Telegraf de chaque serveur, export des alertes Grafana (ADR-031) |

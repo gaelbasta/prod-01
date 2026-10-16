@@ -17,5 +17,6 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [sauvegarde-et-restauration.md](sauvegarde-et-restauration.md) (disque, coffre, sauvegarde nocturne, entretien, restaurer, garde-fous) | 7 | ✅ |
 | [secrets.md](secrets.md) (Sealed Secrets : principe en deux minutes, créer / changer / migrer un secret, restaurer la clé) | 10 | ✅ |
 | [surveillance.md](surveillance.md) (Telegraf, InfluxDB, alertes Grafana, que faire quand une alerte sonne) | 11 | ✅ |
+| [accueil.md](accueil.md) (page d'accueil Homepage : faire apparaître une app, modifier liens et widgets, mettre à jour) | 13 | ✅ |
 | [acces-distant-tailscale.md](acces-distant-tailscale.md) (Tailscale : principe, installation, test en 4G, ajouter un appareil, famille, retour arrière) | 12 | ✅ |
 | redemarrer-prod-01.md | — | ⬜ |

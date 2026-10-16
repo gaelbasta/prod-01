@@ -1,6 +1,6 @@
 # Standard d'hébergement PROD-01
 
-> Statut : **en service** depuis la phase 5 (chart plateforme 0.1.0, 2026-10-10). Premier vrai projet : wiki (phase 6, profil static, image privée).
+> Statut : **en service** depuis la phase 5 (chart plateforme 0.1.0, 2026-10-10 ; **0.2.0** depuis le 2026-10-17, ADR-034). Premier vrai projet : wiki (phase 6, profil static, image privée).
 > Référencé par la **méthode Claude** (repo `claude-method`, V1.2) : `/cadrer` lit ce fichier dès qu'un projet doit être hébergé.
 >
 > **Pour Claude Code travaillant sur un autre projet** : ce repo est en **lecture seule**. Ce qui doit y être ajouté pour le projet (secret scellé, adresse surveillée, appel de sauvegarde — et, dans le repo `wiki`, la ligne de `projets.txt`) est listé pour Gael en ACTION MANUELLE ; aucun `kubectl` / `helm` vers PROD-01 sans sa demande explicite.
@@ -44,6 +44,8 @@ Dès le cadrage (`/cadrer` de la méthode Claude) :
 
 7. **Ses secrets** (tokens, mots de passe, accès à l'image privée `ghcr-pull`) : la **liste** (nom du secret, clés), jamais les valeurs. Ils sont scellés dans **ce** repo, `secrets/prod-01/<projet>/` (ADR-032, [runbook secrets](runbooks/secrets.md), B) ; le projet ne fait que les nommer dans `values-prod.yaml` (`secretEnv`, `imagePullSecrets`).
 
+8. **Sa tuile sur la page d'accueil** : bloc `accueil` (nom, icône, description) dans `values-prod.yaml` — l'app apparaît sur https://home.prod.gba-lab.win dès son déploiement ([runbook accueil](runbooks/accueil.md), B ; ADR-034).
+
 ## Déploiement : Helm (ADR-021, ADR-023)
 
 Le **chart plateforme** (`oci://ghcr.io/gaelbasta/charts/plateforme`, source `charts/plateforme/`) porte les profils `app` et `static`. Chaque projet fournit seulement ses fichiers de valeurs :
@@ -56,7 +58,7 @@ Le **chart plateforme** (`oci://ghcr.io/gaelbasta/charts/plateforme`, source `ch
 
 Déployer (depuis dev-linux ou le PC Windows, après `helm registry login ghcr.io`) :
 ```bash
-helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
   -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait
 ```
 Revenir en arrière : `helm rollback <projet> -n <projet> --kube-context prod-01`.

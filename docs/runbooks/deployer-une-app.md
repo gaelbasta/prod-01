@@ -55,15 +55,19 @@ Le token est mémorisé dans `~/.config/helm/registry/config.json` : fichier **s
 ```
 Ne contient **que ce qui change** par rapport aux défauts du chart. En tête, toujours la commande de déploiement avec la **version du chart** :
 ```yaml
-# Déployer : helm upgrade --install prism oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+# Déployer : helm upgrade --install prism oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
 #              -n prism --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait
 profile: app
 image:
   repository: ghcr.io/gaelbasta/prism
-  tag: "1.0.0"                 # entre guillemets, jamais latest
+  tag: "1.1.0"                 # entre guillemets, jamais latest
 imagePullSecrets: [ghcr-pull]  # image privée (voir étape 2)
 host: prism.prod.gba-lab.win
 healthPath: /healthz
+accueil:                       # tuile sur https://home.prod.gba-lab.win (chart ≥ 0.2.0, runbook accueil.md)
+  enabled: true
+  icon: mdi-finance
+  description: Observatoire financier
 env:
   TZ: Europe/Paris
 secretEnv: [prism-secrets]     # secret scellé dans prod-01/secrets/ (étape 2)
@@ -105,7 +109,7 @@ Détails, changement de valeur, pièges : [secrets.md](secrets.md) (B et C).
 ### 3. Déployer — ✅ (test `smoke`, 2026-10-10)
 
 ```bash
-helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+helm upgrade --install <projet> oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
   -n <projet> --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait --timeout 3m
 ```
 Même commande pour **chaque mise à jour** (nouvelle version d'image = changer `image.tag` dans le fichier, commit, relancer).

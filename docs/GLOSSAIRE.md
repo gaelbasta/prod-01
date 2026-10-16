@@ -17,6 +17,7 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **DNS-01 (validation)** | Preuve de propriété du domaine par un enregistrement TXT temporaire dans le DNS ; fonctionne sans exposer le serveur à Internet. | Prouver qu'une maison est à toi en écrivant un code sur la boîte aux lettres. |
 | **GHCR** | GitHub Container Registry : l'entrepôt où sont rangées les images de mes apps. | Le congélateur où sont stockés les plats sous vide. |
 | **Helm** | L'outil qui installe, met à jour et revient en arrière sur des charts (`helm upgrade --install`, `helm rollback`). | Le livreur-installateur qui garde le bon de livraison de chaque version. |
+| **Homepage** | La page d'accueil de PROD-01 (https://home.prod.gba-lab.win) : elle lit les Ingress du cluster et affiche toute app qui porte les annotations `gethomepage.dev/*` (bloc `accueil` du chart, ADR-034). | Le tableau des départs d'une gare : chaque train s'y inscrit tout seul. |
 | **HelmChartConfig** | Fichier de surcharge K3s pour régler une appli que K3s installe lui-même (ici Traefik), sans toucher à son installation. | Un post-it collé sur la notice de montage. |
 | **Image** | Le modèle figé d'un conteneur, versionné (`prism:1.4.0`). | La recette + le plat congelé, avec une étiquette de version. |
 | **imagePullSecret (`ghcr-pull`)** | Secret qui permet au cluster de télécharger une image **privée** depuis GHCR ; un par namespace. | Le badge d'accès à l'entrepôt. |
@@ -28,6 +29,7 @@ Chaque terme : **ce que c'est**, puis **une image** pour s'en souvenir.
 | **kustomize / overlay** | Une base commune + de petites différences par environnement (pprod, prod). | Un même costume avec des retouches différentes. |
 | **Let's Encrypt (staging / production)** | Autorité gratuite qui délivre les certificats HTTPS. Le staging est un bac à sable (certificats non reconnus, quotas larges) pour tester sans risque. | La répétition avant l'examen officiel. |
 | **LVM** | Une couche qui découpe le disque en volumes redimensionnables. | Des cloisons amovibles au lieu de murs porteurs. |
+| **kustomize** | Assembleur de fichiers YAML intégré à `kubectl` (`apply -k <dossier>`) ; sert à Homepage pour transformer ses fichiers de configuration en ConfigMap. | Une liste de courses qui regroupe plusieurs recettes. |
 | **Manifeste** | Un fichier YAML qui décrit ce qu'on veut dans le cluster. | Une commande passée au restaurant. |
 | **MkDocs** | Outil qui transforme des fichiers Markdown en site web de documentation (ici avec le thème Material). | Un imprimeur qui relie tes fiches en un livre. |
 | **Namespace** | Un compartiment du cluster ; un par projet. | Un tiroir par projet. |

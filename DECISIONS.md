@@ -364,6 +364,27 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Avertissements au `tailscale up` sans effet ici (IPv6 forwarding désactivé, UDP GRO).
   - Mode opératoire : [runbook acces-distant-tailscale.md](docs/runbooks/acces-distant-tailscale.md).
 
+## ADR-034 — Page d'accueil : Homepage, découverte automatique par le chart plateforme 0.2.0
+- **Date** : 2026-10-17 · **Statut** : Acceptée (appliquée le 2026-10-16/17 : Homepage en service, 3 apps affichées) · **Précise** : ADR-021, ADR-023
+- **Contexte** : phase 13 (« Homepage, avec découverte automatique des apps »). Homepage **v2.2.0** (2 septembre 2026) ; aucun chart Helm officiel, seulement des manifestes dans la doc. Choix de Gael : adresse `home.prod.gba-lab.win`, découverte automatique, liens Infra, état du serveur, météo et heure.
+- **Décision** :
+  1. **Homepage installé par des manifestes versionnés** dans `platform/homepage/`, assemblés par **kustomize** (intégré à `kubectl`) : `kubectl --context prod-01 apply -k platform/homepage`, commit avant application (comme ADR-022 point 5). Image publique `ghcr.io/gethomepage/homepage`, version figée.
+  2. **Configuration en fichiers** (`config/*.yaml`) transformés en ConfigMap au nom suffixé par empreinte : toute modification redémarre Homepage avec la nouvelle configuration.
+  3. **Droits en lecture seule** sur le cluster (ClusterRole : namespaces, pods, nodes, ingresses, métriques) ; Homepage ne modifie rien.
+  4. **Découverte automatique** : le **chart plateforme 0.2.0** ajoute un bloc `accueil` (`enabled`, `name`, `group`, `icon`, `description`) qui pose les annotations `gethomepage.dev/*` sur l'Ingress de l'app. Une nouvelle app apparaît sans toucher à Homepage.
+  5. Le chart 0.2.0 reprend aussi les corrections prévues depuis PRISM : **`enableServiceLinks: false`** (plus de variables `<SERVICE>_PORT=tcp://…`, piège PRISM_PORT du 2026-10-11) et le **contexte kubectl dans les NOTES** (`kubeContext`, défaut `prod-01`). Compatible 0.1.0 : un fichier de valeurs 0.1.0 marche tel quel.
+  6. **Liens Infra par adresse IP** (`192.168.1.26`) plutôt que `homeassistant.local` : ils fonctionnent aussi hors de la maison via Tailscale (route LAN de HA, ADR-033).
+  7. **Pas de mot de passe** : la page ne contient que des liens et des indicateurs ; accès LAN + Tailscale comme les autres apps.
+- **Pourquoi** :
+  - *Point 1* : un chart communautaire ajouterait une dépendance pour ~8 objets simples ; les manifestes officiels se lisent et se versionnent tels quels. *Alternative écartée* : passer Homepage par le chart plateforme (il lui faudrait compte de service, droits et fichiers de configuration, hors du rôle d'un chart d'apps).
+  - *Point 4* : « une app = deux lignes dans ses valeurs » ; la page ne peut pas oublier une app, et le point vert montre son état. *Alternative écartée* : une liste écrite à la main (à maintenir à chaque projet).
+- **Validation (2026-10-16/17)** : chart 0.2.0 testé sur k3d (annotations, `enableServiceLinks: false`, NOTES) puis publié (`sha256:3976452f…`, tag `plateforme-0.2.0`) ; Homepage en service (`home → 200`) ; wiki, PRISM (1.1.0, révision 4) et Factorydle passés en 0.2.0 et affichés avec point vert ; plus aucune variable `PRISM_SERVICE_*`.
+- **Conséquences** :
+  - Les nouvelles apps utilisent le chart **0.2.0** (PLATFORM_STANDARD, runbook deployer-une-app).
+  - Homepage (dépôt GitHub de gethomepage) n'est pas mis à jour automatiquement : mise à jour manuelle du tag ([runbook accueil.md](docs/runbooks/accueil.md), D).
+  - Avant l'arrivée de la famille sur Tailscale, la page sera visible par elle comme les apps (pas de donnée sensible).
+  - Pièges du premier déploiement (namespace avant `--dry-run=server`, `rollout restart` au premier démarrage) : runbook accueil.md.
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.

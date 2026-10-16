@@ -65,7 +65,7 @@ sed -i "s/tag: \"[^\"]*\"/tag: \"$TAG\"/" deploy/values-prod.yaml
 git diff                                                                   # une seule ligne : le tag
 git commit -am "Wiki : déploiement prod de l'image $TAG" && git push
 git status --short                                                         # vide
-helm upgrade --install wiki oci://ghcr.io/gaelbasta/charts/plateforme --version 0.1.0 \
+helm upgrade --install wiki oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
   -n wiki --create-namespace -f deploy/values-prod.yaml --kube-context prod-01 --wait --timeout 3m
 ```
 Attendu : `STATUS: deployed`, révision +1. Retour arrière : section D.
