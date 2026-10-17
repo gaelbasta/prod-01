@@ -385,6 +385,25 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Avant l'arrivée de la famille sur Tailscale, la page sera visible par elle comme les apps (pas de donnée sensible).
   - Pièges du premier déploiement (namespace avant `--dry-run=server`, `rollout restart` au premier démarrage) : runbook accueil.md.
 
+## ADR-035 — Notes : Memos, app tierce sur le chart plateforme, copie de la base depuis l'hôte
+- **Date** : 2026-10-17 · **Statut** : Proposée (phase 13 bis) · **Précise** : ADR-005, ADR-027, PLATFORM_STANDARD
+- **Contexte** : phase 13 bis, « une app de notes rapide pour poser ses idées, dans l'esprit de Memos », utilisable au téléphone via Tailscale. Comparés le 2026-10-17 : **Memos** (MIT, ~63 k étoiles, fil de notes courtes, tags, PWA, SQLite), Flatnotes (fichiers Markdown, un seul utilisateur), Blinko (Memos + IA, **PostgreSQL obligatoire**), SilverBullet (wiki Markdown, un seul utilisateur). Memos **0.31.0** = dernière stable (19/09/2026) ; la **26.10** (nouveau nom de version, API déplacée de `/api/v1` vers `/api`) est en rc depuis le 9/10, passage direct depuis 0.31.0 prévu par Memos. Vérifié dans le code de la 0.31.0 : route **`/healthz`**, port réglé par `MEMOS_PORT`, données dans `/var/opt/memos` (`memos_prod.db` en **WAL** + `assets/`), l'image démarre en root, corrige les droits du dossier puis passe en utilisateur **10001** ; **pas de `sqlite3` dans l'image**. Choix de Gael : Memos, adresse `notes.prod.gba-lab.win`, version 0.31.0.
+- **Décision** :
+  1. **Memos 0.31.0**, image publique `docker.io/neosmemo/memos:0.31.0` (version figée, jamais `stable`) ; mises à jour **manuelles**, après lecture des notes de version et une sauvegarde lancée à la main.
+  2. **Déployé avec le chart plateforme 0.2.0**, profil app : release et namespace **`notes`**, adresse **`notes.prod.gba-lab.win`** (le nom de la fonction, pas de l'outil : on pourra changer d'outil sans changer d'adresse). Volume de 2 Gi monté sur `/var/opt/memos`, `MEMOS_DATA` explicite (sinon Memos se rabat en silence sur le dossier courant, hors volume), santé `/healthz`, tuile « Notes » sur la page d'accueil.
+  3. **App tierce : ses valeurs vivent dans ce repo**, `apps/notes/values-prod.yaml` (nouveau dossier `apps/` = apps tierces déployées par le chart plateforme). Pas de repo `gaelbasta/notes` ni d'image GHCR à nous : il n'y a pas de code à nous. Sa documentation = un runbook ici (publié par le wiki avec ce repo).
+  4. **Sauvegarde : copie cohérente faite depuis l'hôte**, par `sqlite3 .backup` (la méthode déjà employée pour la base K3s) vers `/var/lib/sauvegarde-prod-01/notes/memos.db`, puis `PRAGMA integrity_check`. Échec = sauvegarde notée en échec. La base vivante (`memos_prod.db`, `-wal`, `-shm`) est exclue de restic ; `assets/` est sauvegardé tel quel. Variante du contrat ADR-027 (pas de `kubectl exec`, l'image n'a pas d'outil de copie).
+  5. **Comptes** : le premier compte créé devient administrateur → créé dès le déploiement, puis **inscription fermée**. Aucun secret Kubernetes (les comptes vivent dans la base).
+  6. Accès : LAN + Tailscale comme toutes les apps (ADR-033).
+- **Pourquoi** :
+  - *Memos* : correspond exactement au besoin (saisie rapide au téléphone, fil chronologique, tags) ; un conteneur + un fichier SQLite = le profil app tel quel ; comptes multiples prêts pour la famille.
+  - *Alternatives écartées* : Blinko (PostgreSQL non justifié, ADR-005) ; Flatnotes et SilverBullet (plus « documents » que « idées », un seul utilisateur) ; un repo `gaelbasta/notes` ne contenant qu'un fichier de valeurs ; un conteneur annexe avec `sqlite3` (le chart n'en gère pas, et l'hôte sait déjà faire).
+- **Conséquences** :
+  - `scripts/sauvegarde-prod-01.sh` : étape 1 complétée (copie Notes) et exclusion `*_notes_notes-data/memos_prod.db*`.
+  - `monitoring/telegraf/pprod-01.conf` : `https://notes.prod.gba-lab.win/healthz` ajouté (PLATFORM_STANDARD 5).
+  - Memos change vite (sorties presque mensuelles, changements cassants) : ne jamais sauter de version sans lire le guide de mise à jour de Memos.
+  - Mode opératoire : runbook `notes.md` (écrit à partir de ce qui aura été fait).
+
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte
 - **Contexte** : onduleur existant (HA, N100, bientôt PROD-01), relié à aucune machine aujourd'hui.

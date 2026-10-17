@@ -1,0 +1,43 @@
+# Notes (Memos) sur PROD-01 — phase 13 bis, ADR-035 — https://notes.prod.gba-lab.win
+# App TIERCE : image publique de Memos, aucun code à nous → valeurs rangées ici, pas de repo projet.
+# Déployer (depuis ~/claude-projects/prod-01 sur dev-linux, après commit + push) :
+#   helm upgrade --install notes oci://ghcr.io/gaelbasta/charts/plateforme --version 0.2.0 \
+#     -n notes --create-namespace -f apps/notes/values-prod.yaml --kube-context prod-01 --wait
+# Mise à jour de Memos : changer image.tag ci-dessous APRÈS avoir lu les notes de version
+# (changements cassants fréquents) et lancé une sauvegarde à la main — runbook notes.md.
+profile: app
+
+image:
+  repository: docker.io/neosmemo/memos
+  tag: "0.31.0"               # 2026-09-19, sha256:24c2707d… — jamais « stable » ni « latest »
+
+host: notes.prod.gba-lab.win
+
+port: 5230                    # port de Memos
+healthPath: /healthz          # répond « Service ready. » (server/server.go)
+
+accueil:
+  enabled: true
+  name: Notes
+  icon: mdi-lightbulb-on-outline
+  description: Idées en vrac (Memos)
+
+env:
+  TZ: Europe/Paris
+  MEMOS_PORT: "5230"
+  MEMOS_DATA: /var/opt/memos  # explicite : sans lui, Memos se rabat en silence sur le dossier courant (hors volume)
+  MEMOS_INSTANCE_URL: https://notes.prod.gba-lab.win
+
+# Aucun secret : les comptes et mots de passe vivent dans la base de Memos.
+
+persistence:
+  enabled: true
+  size: 2Gi
+  mountPath: /var/opt/memos   # memos_prod.db (SQLite, WAL) + assets/ (pièces jointes)
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 512Mi

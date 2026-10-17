@@ -78,6 +78,7 @@ Connexion : `ssh prod-01` / `ssh pprod-01` depuis le PC Windows ou dev-linux (vo
 | `.nav.yml` (racine, `docs/`, `docs/runbooks/`) | ordre du menu de ce repo dans le wiki (ADR-024) |
 | `k3s/` | configuration K3s versionnée |
 | `charts/` | chart Helm **plateforme** (profils app/static, page d'accueil), publié sur `oci://ghcr.io/gaelbasta/charts/plateforme` (0.2.0) |
+| `apps/` | apps **tierces** (sans code à nous) déployées avec le chart plateforme : un dossier par app avec son `values-prod.yaml` (Notes/Memos, ADR-035) |
 | `platform/` | briques communes du cluster, une par dossier : valeurs Helm (`values-prod.yaml`) et manifestes de configuration (cert-manager, Traefik, Sealed Secrets, Homepage…) |
 | `secrets/` | secrets **chiffrés** (SealedSecret), un dossier par serveur puis par namespace : `secrets/prod-01/<namespace>/<nom>.yaml` (ADR-032) |
 | `scripts/` | reconstruction : `socle-os.sh` (PROD-01 et `pprod-01`), `install-k3s.sh`, `coffre-sauvegardes.sh` (`pprod-01`, ADR-028), `sauvegarde-prod-01.sh` (PROD-01, ADR-029), `telegraf.sh` + `telegraf-etat.sh` (ADR-031) |
