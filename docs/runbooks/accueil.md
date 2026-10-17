@@ -24,7 +24,7 @@
 | Élément | Valeur (2026-10-17) |
 |---|---|
 | Image | `ghcr.io/gethomepage/homepage:v2.2.0` (publique, version figée) |
-| Apps affichées | Factorydle, PRISM, Wiki (rubrique « Apps », triées par nom) |
+| Apps affichées | Factorydle, Notes (depuis le 2026-10-17), PRISM, Wiki (rubrique « Apps », triées par nom) |
 | Liens Infra | Grafana, Home Assistant, Tailscale, GitHub, images GHCR |
 | Widgets | CPU / mémoire de PROD-01 (metrics-server de K3s), date et heure, météo de Gorges (Open-Meteo) |
 | Surveillance | `https://home.prod.gba-lab.win/api/healthcheck` depuis `pprod-01` (alerte « App de PROD-01 injoignable ») |

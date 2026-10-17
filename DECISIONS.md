@@ -386,7 +386,7 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - Pièges du premier déploiement (namespace avant `--dry-run=server`, `rollout restart` au premier démarrage) : runbook accueil.md.
 
 ## ADR-035 — Notes : Memos, app tierce sur le chart plateforme, copie de la base depuis l'hôte
-- **Date** : 2026-10-17 · **Statut** : Proposée (phase 13 bis) · **Précise** : ADR-005, ADR-027, PLATFORM_STANDARD
+- **Date** : 2026-10-17 · **Statut** : Acceptée (appliquée et validée le 2026-10-17) · **Précise** : ADR-005, ADR-027, PLATFORM_STANDARD
 - **Contexte** : phase 13 bis, « une app de notes rapide pour poser ses idées, dans l'esprit de Memos », utilisable au téléphone via Tailscale. Comparés le 2026-10-17 : **Memos** (MIT, ~63 k étoiles, fil de notes courtes, tags, PWA, SQLite), Flatnotes (fichiers Markdown, un seul utilisateur), Blinko (Memos + IA, **PostgreSQL obligatoire**), SilverBullet (wiki Markdown, un seul utilisateur). Memos **0.31.0** = dernière stable (19/09/2026) ; la **26.10** (nouveau nom de version, API déplacée de `/api/v1` vers `/api`) est en rc depuis le 9/10, passage direct depuis 0.31.0 prévu par Memos. Vérifié dans le code de la 0.31.0 : route **`/healthz`**, port réglé par `MEMOS_PORT`, données dans `/var/opt/memos` (`memos_prod.db` en **WAL** + `assets/`), l'image démarre en root, corrige les droits du dossier puis passe en utilisateur **10001** ; **pas de `sqlite3` dans l'image**. Choix de Gael : Memos, adresse `notes.prod.gba-lab.win`, version 0.31.0.
 - **Décision** :
   1. **Memos 0.31.0**, image publique `docker.io/neosmemo/memos:0.31.0` (version figée, jamais `stable`) ; mises à jour **manuelles**, après lecture des notes de version et une sauvegarde lancée à la main.
@@ -402,7 +402,8 @@ On ne supprime jamais une décision : si elle change, on en écrit une nouvelle 
   - `scripts/sauvegarde-prod-01.sh` : étape 1 complétée (copie Notes) et exclusion `*_notes_notes-data/memos_prod.db*`.
   - `monitoring/telegraf/pprod-01.conf` : `https://notes.prod.gba-lab.win/healthz` ajouté (PLATFORM_STANDARD 5).
   - Memos change vite (sorties presque mensuelles, changements cassants) : ne jamais sauter de version sans lire le guide de mise à jour de Memos.
-  - Mode opératoire : runbook `notes.md` (écrit à partir de ce qui aura été fait).
+  - Mode opératoire : [runbook notes.md](docs/runbooks/notes.md).
+- **Validation (2026-10-17)** : déployé (révision 1, pod prêt en 16 s, utilisateur 10001, `Service ready.`) ; compte administrateur créé, inscription fermée (vérifié en navigation privée), notes privées par défaut ; tuile « Notes » sur l'accueil ; sauvegarde manuelle `c502d578` (`Notes : copie OK`, base vivante absente de l'instantané) ; copie restaurée identique ; **restauration complète** répétée (Memos arrêté, base remplacée, note témoin disparue) ; `/healthz` surveillé depuis `pprod-01` (Grafana Normal) ; PWA installée sur le téléphone, aller-retour d'une note en 4G via Tailscale, injoignable sans Tailscale.
 
 ## ADR-015 — Onduleur
 - **Date** : 2026-10-09 · **Statut** : Ouverte

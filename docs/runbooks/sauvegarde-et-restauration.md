@@ -10,7 +10,7 @@
 PROD-01 (192.168.1.16)                                   pprod-01 (192.168.1.51)
 ───────────────────────                                   ───────────────────────
 timer 3 h → sauvegarde-prod-01 lancer                     rest-server :8000 (--append-only, --private-repos)
-  1. PRISM, Factorydle : copies cohérentes                  ↑ seul 192.168.1.16 autorisé (ufw)
+  1. PRISM, Factorydle, Notes : copies cohérentes           ↑ seul 192.168.1.16 autorisé (ufw)
   2. K3s : sqlite3 .backup + integrity_check                │ identifiant « prod-01 »
   3. restic backup ── chiffré avant l'envoi ── HTTP ────────┘
   4. trace derniere-reussite                               disque IronWolf 4 To → /srv/sauvegardes
@@ -24,8 +24,8 @@ timer 3 h → sauvegarde-prod-01 lancer                     rest-server :8000 (-
 |---|---|
 | `/etc` (dont `/etc/rancher/k3s/config.yaml`, `/etc/rancher/node/password`, `/etc/restic`) | — |
 | `/var/lib/rancher/k3s/server` (`token`, `tls/`, `cred/`, manifests) | `db/state.db*` vivante (remplacée par la copie), `kine.sock` |
-| `/var/lib/rancher/k3s/storage` (volumes des apps) | `prism.sqlite*` vivante (seules les copies de `/data/sauvegardes` sont fiables, ADR-027) ; Factorydle : `*.tmp` (fichiers en cours d'écriture) |
-| `/var/lib/sauvegarde-prod-01` (copie de la base K3s, traces) | `/var/lib/rancher/k3s/agent` (images, ~1,6 Go : se retéléchargent) |
+| `/var/lib/rancher/k3s/storage` (volumes des apps) | `prism.sqlite*` vivante (seules les copies de `/data/sauvegardes` sont fiables, ADR-027) ; Factorydle : `*.tmp` (fichiers en cours d'écriture) ; Notes : `memos_prod.db*` vivante (remplacée par la copie, ADR-035) |
+| `/var/lib/sauvegarde-prod-01` (copies des bases K3s et Notes, traces) | `/var/lib/rancher/k3s/agent` (images, ~1,6 Go : se retéléchargent) |
 
 ## Où sont les secrets
 
@@ -184,6 +184,10 @@ sudo rm -rf /tmp/restauration-factorydle
 Résultat : `Restored 14 / 8 files/dirs`, **IDENTIQUE à la copie de la nuit** (qui contenait la partie « Essai PROD »).
 
 > **Piège** : un `*` dans un chemin restauré doit être placé **à l'intérieur** de `sudo sh -c '…'`. Sinon c'est ton shell (utilisateur `gael`) qui essaie de le développer avant `sudo`, n'a pas le droit de lister le dossier (propriété de root), et la commande échoue avec `No such file or directory`.
+
+### C3 ter. Notes (Memos) — testé ✅ 2026-10-17
+
+Copie faite depuis l'hôte (`sqlite3 .backup` → `/var/lib/sauvegarde-prod-01/notes/memos.db`, ADR-035). Contrôler une copie, remettre Memos dans l'état d'une sauvegarde : [notes.md](notes.md), section C.
 
 ### C4. Depuis le coffre, si PROD-01 est perdu
 

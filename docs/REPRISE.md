@@ -165,8 +165,19 @@ et proposer un nouvel ADR.
     santé /api/healthcheck surveillée depuis pprod-01. Pièges : namespace avant --dry-run=server ; au 1er démarrage
     settings.yaml ignoré → rollout restart deploy/homepage.
   - Wiki, PRISM (1.1.0, révision 4 ; PRISM_PORT retiré du fichier de valeurs) et Factorydle en 0.2.0, affichés.
-- PROCHAINE PHASE : 13 bis — app de notes (style Memos), ajoutée le 2026-10-17 à la demande de Gael.
-  Puis niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
+- Phase 13 bis ✅ 2026-10-17 — Notes = Memos (ADR-035, runbook notes.md) :
+  - Memos 0.31.0 (image publique docker.io/neosmemo/memos, version figée), https://notes.prod.gba-lab.win, chart 0.2.0,
+    release/namespace notes, volume notes-data pvc-0ade3a53-… sur /var/opt/memos, santé /healthz, tuile « Notes ».
+  - APP TIERCE : valeurs dans CE repo, apps/notes/values-prod.yaml (nouveau dossier apps/) ; pas de repo ni d'image à nous.
+  - Compte gael (admin, gestionnaire « Memos – notes.prod (gael) »), inscription fermée, notes privées par défaut.
+  - Sauvegarde : copie depuis l'hôte (copier_notes : sqlite3 .backup → /var/lib/sauvegarde-prod-01/notes/memos.db +
+    integrity_check), base vivante exclue ; instantané c502d578 ; restauration complète répétée (notes.md C3).
+  - Surveillé depuis pprod-01 ; PWA sur le téléphone (Chrome, pas Mi Browser), testée en 4G via Tailscale.
+  - Mises à jour manuelles (notes.md D) : la 26.10 (rc le 9/10) change l'API et le nom des versions ; un helm
+    rollback ne rétrograde pas la base → restaurer la copie prise avant.
+  - Piège vécu : `sudo cp "$VOL"/x*` → le * est développé par gael, sans droit sur storage/ → échec ; mettre le *
+    dans `sudo sh -c '…'` et contrôler par ls avant tout rm.
+- PROCHAINE PHASE : niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

@@ -19,4 +19,5 @@ Les fiches sont écrites au fur et à mesure, à partir de ce qui a *réellement
 | [surveillance.md](surveillance.md) (Telegraf, InfluxDB, alertes Grafana, que faire quand une alerte sonne) | 11 | ✅ |
 | [accueil.md](accueil.md) (page d'accueil Homepage : faire apparaître une app, modifier liens et widgets, mettre à jour) | 13 | ✅ |
 | [acces-distant-tailscale.md](acces-distant-tailscale.md) (Tailscale : principe, installation, test en 4G, ajouter un appareil, famille, retour arrière) | 12 | ✅ |
+| [notes.md](notes.md) (Memos : installer, compte, sauvegarde, restaurer, mettre à jour, téléphone) | 13 bis | ✅ |
 | redemarrer-prod-01.md | — | ⬜ |

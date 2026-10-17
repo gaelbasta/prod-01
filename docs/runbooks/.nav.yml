@@ -15,5 +15,6 @@ nav:
   - surveillance.md
   - acces-distant-tailscale.md
   - accueil.md
+  - notes.md
   - glob: "*"         # tout nouveau runbook apparaît ensuite, sans rien oublier
     ignore_no_matches: true

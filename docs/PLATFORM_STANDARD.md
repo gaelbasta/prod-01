@@ -46,6 +46,13 @@ Dès le cadrage (`/cadrer` de la méthode Claude) :
 
 8. **Sa tuile sur la page d'accueil** : bloc `accueil` (nom, icône, description) dans `values-prod.yaml` — l'app apparaît sur https://home.prod.gba-lab.win dès son déploiement ([runbook accueil](runbooks/accueil.md), B ; ADR-034).
 
+## App tierce (image publique, aucun code à nous) — ADR-035
+
+Exemple : Notes (Memos). Même chart, mêmes points 1 à 8, avec ces différences :
+- pas de repo `gaelbasta/<projet>` ni d'image GHCR : les valeurs vivent dans **ce** repo, `apps/<projet>/values-prod.yaml`, et la doc est un runbook `docs/runbooks/<projet>.md` ;
+- image publique **à version figée** (jamais `stable` ni `latest`), mises à jour manuelles après lecture des notes de version ;
+- si l'image n'a pas d'outil de copie cohérente, la copie se fait **depuis l'hôte** dans `scripts/sauvegarde-prod-01.sh` (SQLite : `sqlite3 .backup`, comme la base K3s).
+
 ## Déploiement : Helm (ADR-021, ADR-023)
 
 Le **chart plateforme** (`oci://ghcr.io/gaelbasta/charts/plateforme`, source `charts/plateforme/`) porte les profils `app` et `static`. Chaque projet fournit seulement ses fichiers de valeurs :
