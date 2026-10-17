@@ -172,7 +172,8 @@ et proposer un nouvel ADR.
   - Compte gael (admin, gestionnaire « Memos – notes.prod (gael) »), inscription fermée, notes privées par défaut.
   - Sauvegarde : copie depuis l'hôte (copier_notes : sqlite3 .backup → /var/lib/sauvegarde-prod-01/notes/memos.db +
     integrity_check), base vivante exclue ; instantané c502d578 ; restauration complète répétée (notes.md C3).
-  - Surveillé depuis pprod-01 ; PWA sur le téléphone (Chrome, pas Mi Browser), testée en 4G via Tailscale.
+  - Surveillé depuis pprod-01 ; PWA sur le téléphone : menu ⋮ de CHROME (pas celui de Memos ; rien trouvé dans
+    Firefox), testée en 4G via Tailscale.
   - Mises à jour manuelles (notes.md D) : la 26.10 (rc le 9/10) change l'API et le nom des versions ; un helm
     rollback ne rétrograde pas la base → restaurer la copie prise avant.
   - Piège vécu : `sudo cp "$VOL"/x*` → le * est développé par gael, sans droit sur storage/ → échec ; mettre le *

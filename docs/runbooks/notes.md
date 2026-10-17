@@ -170,10 +170,11 @@ Memos sort presque chaque mois, souvent avec des **changements cassants** (la 26
 2. Menu **⋮** → « Ajouter à l'écran d'accueil » / « Installer l'application ». L'icône Memos ouvre l'app en plein écran.
 3. Testé en 4G (Wi-Fi coupé) : note écrite au téléphone, visible sur le PC ✅ ; Tailscale coupé → l'app ne joint plus le serveur (voulu, ADR-033) ✅.
 
-Si l'entrée n'apparaît pas (rencontré le 2026-10-17) :
-- vérifier qu'on est bien dans **Chrome** et pas dans le navigateur Xiaomi (Mi Browser), qui ne propose pas l'installation ;
-- faire **défiler** le menu ⋮ jusqu'en bas, ou passer par ⋮ → **Partager…** → « Ajouter à l'écran d'accueil » ;
-- entrée présente mais aucune icône créée : *Paramètres → Applications → Chrome → Autorisations* → autoriser « Raccourcis sur l'écran d'accueil » (réglage propre à Xiaomi).
+Ce qui a débloqué l'installation le 2026-10-17 :
+- chercher dans le menu **⋮ du navigateur** (en haut à droite de Chrome), **pas** dans le menu de Memos ;
+- utiliser **Chrome** : l'équivalent n'a pas été trouvé dans Firefox.
+
+Autres pistes, non nécessaires ce jour-là : faire défiler le menu ⋮ jusqu'en bas, ou ⋮ → **Partager…** → « Ajouter à l'écran d'accueil » ; si l'entrée existe mais qu'aucune icône n'apparaît : *Paramètres → Applications → Chrome → Autorisations* → « Raccourcis sur l'écran d'accueil » (réglage propre à Xiaomi).
 
 ---
 
