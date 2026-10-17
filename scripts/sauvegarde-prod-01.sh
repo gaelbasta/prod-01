@@ -11,7 +11,8 @@
 #   sudo sauvegarde-prod-01 restic <commande>    # restic avec les réglages du dépôt (ex. : snapshots, ls latest, restore)
 #
 # Ce que fait « lancer » :
-#   1. copie cohérente de chaque app qui en a une (PRISM, Factorydle : contrat ADR-027) ;
+#   1. copie cohérente de chaque app qui en a une (PRISM, Factorydle : contrat ADR-027 ;
+#      Notes/Memos : copie de sa base SQLite depuis l'hôte, ADR-035) ;
 #   2. copie cohérente de la base K3s (sauvegarde en ligne SQLite) + contrôle d'intégrité ;
 #   3. restic backup : /etc, /var/lib/rancher/k3s/server (token, tls… ; base vivante exclue),
 #      /var/lib/rancher/k3s/storage (volumes ; bases vivantes exclues), copies du point 2 ;
@@ -35,6 +36,8 @@ FICHIER_MDP="${DIR_SECRETS}/motdepasse"
 FICHIER_ENV="${DIR_SECRETS}/prod-01.env"
 ETAT="/var/lib/sauvegarde-prod-01"          # copies cohérentes + traces
 COPIE_K3S="${ETAT}/k3s/state.db"
+COPIE_NOTES="${ETAT}/notes/memos.db"       # copie de la base de Memos (ADR-035)
+STOCKAGE="/var/lib/rancher/k3s/storage"     # volumes des apps (local-path)
 BASE_K3S="/var/lib/rancher/k3s/server/db/state.db"
 CIBLE="/usr/local/sbin/sauvegarde-prod-01"  # copie installée (celle que lance le timer)
 HEURE="03:00"                               # heure de la sauvegarde nocturne
@@ -95,6 +98,7 @@ installer() {
   install -m 750 -o root -g root "$0" "$CIBLE"
   install -d -m 711 "$ETAT"            # 711 : Telegraf lit les traces par leur nom, sans lister le dossier (ADR-031)
   install -d -m 700 "${ETAT}/k3s"      # la copie de la base K3s reste réservée à root
+  install -d -m 700 "${ETAT}/notes"    # idem pour la copie de la base de Memos (ADR-035)
 
   journal "==> Service et timer systemd (timer NON activé)"
   cat > /etc/systemd/system/sauvegarde-prod-01.service <<EOF
@@ -138,6 +142,23 @@ initialiser() {
   restic cat config
 }
 
+# --------------------------------------------------------------------------- copier_notes
+# Notes / Memos (ADR-035) : l'image n'a pas sqlite3 → copie en ligne faite depuis l'hôte,
+# comme la base K3s (« .backup » gère le mode WAL), puis contrôle d'intégrité.
+copier_notes() {
+  local vols=( "${STOCKAGE}"/*_notes_notes-data ) base
+  if [[ ${#vols[@]} -ne 1 || ! -d "${vols[0]}" ]]; then
+    journal "Notes : volume *_notes_notes-data introuvable ou en double"; return 1
+  fi
+  base="${vols[0]}/memos_prod.db"
+  [[ -s "$base" ]] || { journal "Notes : base absente (${base})"; return 1; }
+  install -d -m 700 "$(dirname "$COPIE_NOTES")"
+  rm -f "$COPIE_NOTES"
+  sqlite3 "$base" ".backup '${COPIE_NOTES}'" \
+    && [[ "$(sqlite3 "$COPIE_NOTES" 'PRAGMA integrity_check;')" == "ok" ]] \
+    && journal "Notes : copie OK ($(du -h "$COPIE_NOTES" | cut -f1), intégrité ok, $(sqlite3 "$COPIE_NOTES" 'SELECT count(*) FROM memo;') notes)"
+}
+
 # --------------------------------------------------------------------------- lancer
 lancer() {
   charger_env
@@ -158,6 +179,10 @@ lancer() {
   else
     journal "Factorydle : ÉCHEC de la copie cohérente"; echecs+=("factorydle")
   fi
+  # Notes / Memos (ADR-035) : copie depuis l'hôte vers ${COPIE_NOTES}
+  if ! copier_notes; then
+    journal "Notes : ÉCHEC de la copie cohérente"; echecs+=("notes")
+  fi
 
   journal "==> 2. Copie cohérente de la base K3s"
   rm -f "$COPIE_K3S"
@@ -175,6 +200,7 @@ lancer() {
     --exclude "/var/lib/rancher/k3s/server/kine.sock" \
     --exclude "/var/lib/rancher/k3s/storage/*_prism_prism-data/prism.sqlite*" \
     --exclude "/var/lib/rancher/k3s/storage/*_factorydle_factorydle-data/**/*.tmp" \
+    --exclude "/var/lib/rancher/k3s/storage/*_notes_notes-data/memos_prod.db*" \
     /etc /var/lib/rancher/k3s/server /var/lib/rancher/k3s/storage "$ETAT" \
     || code=$?
   # 0 = OK ; 3 = instantané créé mais des fichiers illisibles ; autre = pas d'instantané
