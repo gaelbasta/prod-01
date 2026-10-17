@@ -165,7 +165,8 @@ et proposer un nouvel ADR.
     santé /api/healthcheck surveillée depuis pprod-01. Pièges : namespace avant --dry-run=server ; au 1er démarrage
     settings.yaml ignoré → rollout restart deploy/homepage.
   - Wiki, PRISM (1.1.0, révision 4 ; PRISM_PORT retiré du fichier de valeurs) et Factorydle en 0.2.0, affichés.
-- PROCHAINE PHASE : niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
+- PROCHAINE PHASE : 13 bis — app de notes (style Memos), ajoutée le 2026-10-17 à la demande de Gael.
+  Puis niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

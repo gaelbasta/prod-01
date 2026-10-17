@@ -27,6 +27,7 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 | 11 | Monitoring | Telegraf → InfluxDB → Grafana (existant sur la machine HA), alertes via Home Assistant, dont « plus de données » (ADR-031) ; 11 règles, test réel réussi ([runbook](docs/runbooks/surveillance.md)) | ✅ 2026-10-15 |
 | 12 | Accès distant | Tailscale 1.104.1 sur PROD-01, qui annonce sa seule adresse (`192.168.1.16/32`) : mêmes URL dedans et dehors, PRISM compris (ADR-033) ; test réel en 4G réussi, connexion directe ([runbook](docs/runbooks/acces-distant-tailscale.md)). Famille : plus tard, avec des règles d'accès | ✅ 2026-10-15 |
 | 13 | Landing page | Homepage v2.2.0 sur https://home.prod.gba-lab.win : apps découvertes automatiquement (chart plateforme **0.2.0**, bloc `accueil`), liens Infra, CPU/mémoire, date, météo (ADR-034, [runbook](docs/runbooks/accueil.md)) ; wiki, PRISM et Factorydle affichés | ✅ 2026-10-17 |
+| 13 bis | Notes | Une app de prise de notes rapide pour poser ses idées, dans l'esprit de [Memos](https://github.com/usememos/memos) : choix de l'outil, hébergement selon le standard (chart plateforme, sauvegarde, accueil), accès téléphone via Tailscale | ⬜ |
 
 ## Niveau 3 — La robustesse
 
