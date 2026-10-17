@@ -1,0 +1,19 @@
+# /etc/nut/upsd.users de PROD-01 — MODÈLE du repo prod-01 (onduleur/prod-01/upsd.users), phase 15
+# Les @@…@@ sont remplacés à l'installation par scripts/onduleur.sh : les vrais mots de passe
+# ne sont JAMAIS dans Git (gestionnaire : « NUT – upsmon-<machine> »).
+# Un compte par machine : on peut en révoquer un sans toucher aux autres.
+
+# PROD-01 lui-même : la primaire, celle qui a le câble USB et qui décide de l'arrêt général.
+[upsmon-prod-01]
+    password = @@MDP_PROD_01@@
+    upsmon primary
+
+# pprod-01 : secondaire, s'éteint quand PROD-01 lève le drapeau « arrêt forcé ».
+[upsmon-pprod-01]
+    password = @@MDP_PPROD_01@@
+    upsmon secondary
+
+# Box Home Assistant Green (extension « Network UPS Tools ») : secondaire.
+[upsmon-ha]
+    password = @@MDP_HA@@
+    upsmon secondary

@@ -1,0 +1,18 @@
+#!/bin/sh
+# /etc/nut/upssched-cmd de PROD-01 — géré par le repo prod-01 (onduleur/prod-01/upssched-cmd), phase 15
+# Lancé par upssched (utilisateur nut) avec le nom de l'événement ou du minuteur.
+case "$1" in
+  coupure)
+    logger -t onduleur "Coupure de courant : onduleur sur batterie. Arrêt général dans 5 min si le courant ne revient pas."
+    ;;
+  retour)
+    logger -t onduleur "Courant revenu : arrêt général annulé."
+    ;;
+  arret-general)
+    logger -t onduleur "Sur batterie depuis 5 min : ARRÊT GÉNÉRAL (drapeau FSD pour pprod-01 et la box HA, puis PROD-01)."
+    /usr/sbin/upsmon -c fsd
+    ;;
+  *)
+    logger -t onduleur "upssched-cmd : événement inconnu « $1 »"
+    ;;
+esac
