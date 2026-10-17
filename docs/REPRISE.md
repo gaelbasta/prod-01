@@ -178,7 +178,9 @@ et proposer un nouvel ADR.
     rollback ne rétrograde pas la base → restaurer la copie prise avant.
   - Piège vécu : `sudo cp "$VOL"/x*` → le * est développé par gael, sans droit sur storage/ → échec ; mettre le *
     dans `sudo sh -c '…'` et contrôler par ls avant tout rm.
-- PROCHAINE PHASE : niveau 3 — 14 PPROD (K3s sur pprod-01), 15 onduleur, 16 NAS, 17 test de reconstruction.
+- PROCHAINE PHASE (choix de Gael le 2026-10-17) : **15 — onduleur** (d'abord comprendre comment ça marche : NUT,
+  arrêt propre des machines). 14 PPROD, 16 NAS et 17 reconstruction EN ATTENTE (confort ; prix du stockage et des NAS).
+  À apporter : modèle exact de l'onduleur (étiquette), câble USB fourni ou non, quelles machines y sont branchées.
 - Chart plateforme 0.2.0 à prévoir : enableServiceLinks: false, --context dans les NOTES, commentaires secrets (ADR-032)
   (voir charts/plateforme/README.md).
 ```

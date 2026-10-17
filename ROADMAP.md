@@ -31,6 +31,8 @@ Statuts : ⬜ à faire · 🟨 en cours · ✅ fait
 
 ## Niveau 3 — La robustesse
 
+> 2026-10-17 : la phase **15 (onduleur)** passe en premier ; 14, 16 et 17 attendent (confort, prix du stockage et des NAS).
+
 | # | Phase | Contenu | Statut |
 |---|---|---|---|
 | 14 | PPROD | K3s, wildcard `*.pprod.gba-lab.win` et déploiements sur `pprod-01` (l'OS et le socle sont faits en phase 7, ADR-026) | ⬜ |
